@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 
+// Disable caching for this route
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const JIRA_DOMAIN = process.env.JIRA_DOMAIN;
 const JIRA_EMAIL = process.env.JIRA_EMAIL;
 const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
@@ -203,12 +207,23 @@ export async function GET(request: Request) {
       return new Date(b.updated).getTime() - new Date(a.updated).getTime();
     });
 
-    return NextResponse.json({ tasks: sortedTasks });
+    return NextResponse.json({ tasks: sortedTasks }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error: any) {
     console.error('Jira API error:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to fetch Jira tasks' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
     );
   }
 }
