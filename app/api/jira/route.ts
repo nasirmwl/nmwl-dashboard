@@ -26,22 +26,26 @@ export async function GET(request: Request) {
   });
 
   try {
-    // Fetch tasks from current active sprint assigned to the user
-    const jql = encodeURIComponent(
-      'sprint in openSprints() AND assignee = currentUser() ORDER BY updated DESC'
-    );
+    // Try multiple JQL approaches - currentUser() might work, but email might be needed
+    // Try currentUser() first (works in some Jira setups)
+    let jql = `sprint in openSprints() AND assignee = currentUser() ORDER BY updated DESC`;
+    let encodedJql = encodeURIComponent(jql);
 
-    // Use the new /rest/api/3/search/jql endpoint (migrated from /rest/api/3/search)
-    const response = await fetch(
-      `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${jql}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64')}`,
-          Accept: 'application/json',
-        },
-      }
-    );
+    console.log('Jira API - Trying query with currentUser():', {
+      jql: jql,
+      maxResults: limit,
+    });
+
+    // Use the /rest/api/3/search/jql endpoint (original working endpoint)
+    let apiUrl = `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${encodedJql}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`;
+    
+    let response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64')}`,
+        Accept: 'application/json',
+      },
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -65,7 +69,84 @@ export async function GET(request: Request) {
       throw new Error(`Jira API error: ${response.status} - ${response.statusText}`);
     }
 
-    const data = await response.json();
+    let data = await response.json();
+
+    // Log response for debugging
+    console.log('Jira API - Response (currentUser):', {
+      total: data.total || 0,
+      issuesCount: data.issues?.length || 0,
+      hasIssues: !!data.issues,
+    });
+
+    // If no results with currentUser(), try with email directly
+    if (!data.issues || data.issues.length === 0) {
+      console.log('Jira API - No results with currentUser(), trying with email...');
+      
+      // Extract username from email (part before @) as fallback
+      const username = JIRA_EMAIL.split('@')[0];
+      const emailJql = `sprint in openSprints() AND assignee = "${JIRA_EMAIL}" ORDER BY updated DESC`;
+      const usernameJql = `sprint in openSprints() AND assignee = "${username}" ORDER BY updated DESC`;
+      
+      // Try email first
+      let fallbackJql = emailJql;
+      let fallbackEncoded = encodeURIComponent(fallbackJql);
+      let fallbackUrl = `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${fallbackEncoded}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`;
+      
+      console.log('Jira API - Trying fallback with email:', { jql: fallbackJql });
+      
+      response = await fetch(fallbackUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64')}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        data = await response.json();
+        console.log('Jira API - Response (email):', {
+          total: data.total || 0,
+          issuesCount: data.issues?.length || 0,
+        });
+        
+        // If still no results, try username
+        if (!data.issues || data.issues.length === 0) {
+          console.log('Jira API - No results with email, trying username...');
+          fallbackJql = usernameJql;
+          fallbackEncoded = encodeURIComponent(fallbackJql);
+          fallbackUrl = `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${fallbackEncoded}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`;
+          
+          response = await fetch(fallbackUrl, {
+            method: 'GET',
+            headers: {
+              Authorization: `Basic ${Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64')}`,
+              Accept: 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            data = await response.json();
+            console.log('Jira API - Response (username):', {
+              total: data.total || 0,
+              issuesCount: data.issues?.length || 0,
+            });
+          } else {
+            console.warn('Jira API - Username fallback failed:', response.status);
+          }
+        }
+      } else {
+        console.warn('Jira API - Email fallback failed:', response.status);
+      }
+    }
+
+    // Handle case where issues might be undefined or empty
+    if (!data.issues || !Array.isArray(data.issues)) {
+      console.warn('Jira API - No issues in response after all attempts:', {
+        dataKeys: Object.keys(data),
+        responseStructure: JSON.stringify(data).substring(0, 200),
+      });
+      return NextResponse.json({ tasks: [] });
+    }
 
     const tasks = data.issues.map((issue: any) => ({
       id: issue.key,
