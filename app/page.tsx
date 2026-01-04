@@ -1,6 +1,6 @@
-import WeatherSection from './components/WeatherSection';
-import NotesSection from './components/NotesSection';
 import JiraTasksSection from './components/JiraTasksSection';
+import NotesSection from './components/NotesSection';
+import WeatherSection from './components/WeatherSection';
 
 export default function Home() {
   return (

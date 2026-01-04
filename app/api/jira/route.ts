@@ -13,9 +13,9 @@ export async function GET() {
   }
 
   try {
-    // Fetch high priority tasks assigned to the user
+    // Fetch tasks from current active sprint assigned to the user
     const jql = encodeURIComponent(
-      'priority = Highest AND status != Done AND assignee = currentUser() ORDER BY updated DESC'
+      'sprint in openSprints() AND assignee = currentUser() ORDER BY updated DESC'
     );
 
     // Use the new /rest/api/3/search/jql endpoint (migrated from /rest/api/3/search)
