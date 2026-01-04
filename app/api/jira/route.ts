@@ -4,11 +4,12 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const JIRA_DOMAIN = process.env.JIRA_DOMAIN;
-const JIRA_EMAIL = process.env.JIRA_EMAIL;
-const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
-
 export async function GET(request: Request) {
+  // Read environment variables at runtime (important for Vercel/serverless)
+  const JIRA_DOMAIN = process.env.JIRA_DOMAIN;
+  const JIRA_EMAIL = process.env.JIRA_EMAIL;
+  const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
+
   if (!JIRA_DOMAIN || !JIRA_EMAIL || !JIRA_API_TOKEN) {
     return NextResponse.json(
       { error: 'Jira credentials not configured. Please set JIRA_DOMAIN, JIRA_EMAIL, and JIRA_API_TOKEN in your environment variables.' },
