@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
   try {
     // Try multiple JQL approaches - currentUser() might work, but email might be needed
-    // Try currentUser() first (works in some Jira setups)
+    // Try currentUser() with sprint filter first (works in some Jira setups, but can fail in Vercel)
     let jql = `sprint in openSprints() AND assignee = currentUser() ORDER BY updated DESC`;
     let encodedJql = encodeURIComponent(jql);
 
@@ -52,16 +52,18 @@ export async function GET(request: Request) {
       },
     });
 
+    let data: any = null;
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Jira API error:', {
+      console.error('Jira API error (first query):', {
         status: response.status,
         statusText: response.statusText,
         error: errorText.substring(0, 500), // Limit error text length
         url: `https://${JIRA_DOMAIN}/rest/api/3/search/jql`,
       });
       
-      // Provide more helpful error messages
+      // For auth/permission errors, throw immediately
       if (response.status === 401) {
         throw new Error('Jira authentication failed. Please check your JIRA_EMAIL and JIRA_API_TOKEN.');
       }
@@ -71,20 +73,21 @@ export async function GET(request: Request) {
       if (response.status === 404) {
         throw new Error(`Jira domain not found. Please check your JIRA_DOMAIN: ${JIRA_DOMAIN}`);
       }
-      throw new Error(`Jira API error: ${response.status} - ${response.statusText}`);
+      // For other errors (like 400 JQL errors), log and try fallbacks instead of throwing
+      console.log('Jira API - First query failed, will try fallback queries');
+    } else {
+      data = await response.json();
+
+      // Log response for debugging
+      console.log('Jira API - Response (currentUser):', {
+        total: data.total || 0,
+        issuesCount: data.issues?.length || 0,
+        hasIssues: !!data.issues,
+      });
     }
 
-    let data = await response.json();
-
-    // Log response for debugging
-    console.log('Jira API - Response (currentUser):', {
-      total: data.total || 0,
-      issuesCount: data.issues?.length || 0,
-      hasIssues: !!data.issues,
-    });
-
-    // If no results with currentUser(), try different approaches
-    if (!data.issues || data.issues.length === 0) {
+    // If first query failed or no results, try different approaches
+    if (!data || !data.issues || data.issues.length === 0) {
       console.log('Jira API - No results with currentUser(), trying fallbacks...');
       
       // First, try without sprint filter to see if user has any tasks at all
@@ -165,10 +168,10 @@ export async function GET(request: Request) {
     }
 
     // Handle case where issues might be undefined or empty
-    if (!data.issues || !Array.isArray(data.issues)) {
+    if (!data || !data.issues || !Array.isArray(data.issues)) {
       console.warn('Jira API - No issues in response after all attempts:', {
-        dataKeys: Object.keys(data),
-        responseStructure: JSON.stringify(data).substring(0, 200),
+        dataKeys: data ? Object.keys(data) : [],
+        responseStructure: data ? JSON.stringify(data).substring(0, 200) : 'null',
       });
       return NextResponse.json({ tasks: [] });
     }
