@@ -1,5 +1,6 @@
 import JiraTasksSection from './components/JiraTasksSection';
 import NotesSection from './components/NotesSection';
+import PromisesSection from './components/PromisesSection';
 import WeatherSection from './components/WeatherSection';
 
 export default function Home() {
@@ -15,6 +16,11 @@ export default function Home() {
           {/* Notes Section - Middle */}
           <section>
             <NotesSection />
+          </section>
+
+          {/* Promises Section */}
+          <section>
+            <PromisesSection />
           </section>
 
           {/* Jira Tasks Section - Bottom */}

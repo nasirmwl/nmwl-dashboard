@@ -50,6 +50,11 @@ const formatHour = (hour: number): string => {
 };
 
 export default function WeatherCard({ current, hourly, label, date }: WeatherCardProps) {
+  // Debug: log icon value
+  if (current && label === 'Today') {
+    console.log('Today current weather icon:', current.icon, 'Full current object:', current);
+  }
+
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900 rounded-2xl p-6 shadow-lg border border-blue-200 dark:border-blue-800">
       <div className="flex items-center justify-between mb-4">
@@ -57,17 +62,30 @@ export default function WeatherCard({ current, hourly, label, date }: WeatherCar
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{label}</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">{format(date, 'EEEE, MMMM d')}</p>
         </div>
-        {current && current.icon && (
+        {current?.icon ? (
           <img
-            src={`https://openweathermap.org/img/wn/${current.icon}@2x.png`}
-            alt={current.description}
+            src={`https://openweathermap.org/img/wn/${current.icon}.png`}
+            alt={current.description || 'Weather icon'}
             className="w-16 h-16"
             loading="lazy"
             onError={(e) => {
-              console.error('Failed to load weather icon:', current.icon);
-              (e.target as HTMLImageElement).style.display = 'none';
+              console.error('Failed to load weather icon:', current.icon, `URL: https://openweathermap.org/img/wn/${current.icon}.png`);
+              // Try @2x version as fallback
+              const img = e.target as HTMLImageElement;
+              const fallbackUrl = `https://openweathermap.org/img/wn/${current.icon}@2x.png`;
+              img.onerror = () => {
+                console.error('Fallback also failed for icon:', current.icon);
+                img.style.display = 'none';
+              };
+              img.src = fallbackUrl;
             }}
           />
+        ) : (
+          current && (
+            <div className="w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded flex items-center justify-center">
+              <span className="text-xs text-gray-500">No icon</span>
+            </div>
+          )
         )}
       </div>
 
