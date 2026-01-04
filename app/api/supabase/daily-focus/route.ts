@@ -15,7 +15,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('imp_events')
       .select('*')
-      .order('date', { ascending: false, nullsLast: true })
+      .order('date', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false });
 
     if (error) {
