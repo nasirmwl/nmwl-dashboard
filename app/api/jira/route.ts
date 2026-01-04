@@ -1,50 +1,30 @@
 import { NextResponse } from 'next/server';
 
-// Disable caching for this route
+// Hardcoded Jira credentials
+const JIRA_DOMAIN = 'nasirmovlamov-1754308528391.atlassian.net';
+const JIRA_EMAIL = 'nasirmovlamov@gmail.com';
+const JIRA_API_TOKEN = 'ATATT3xFfGF0Ob4obI2N7NqUUIrZmMyctUptKlkoCyCBJnJpnyWVcUIZYC1xGTvOC6MNNL4V0v3am3H5xMnsJoy7n3HMRPIhQGbw79OdUox4gW8cqcdpJj6IevpSB80T-Em27NYLlcqSO3XVxSMZitD-i5Ie9p-pdUvFkJGFSEyfZYgJvS0RNqI=72F39ED5';
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(request: Request) {
-  // Read environment variables at runtime (important for Vercel/serverless)
-  const JIRA_DOMAIN = process.env.JIRA_DOMAIN;
-  const JIRA_EMAIL = process.env.JIRA_EMAIL;
-  const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN;
-
-  if (!JIRA_DOMAIN || !JIRA_EMAIL || !JIRA_API_TOKEN) {
-    return NextResponse.json(
-      { error: 'Jira credentials not configured. Please set JIRA_DOMAIN, JIRA_EMAIL, and JIRA_API_TOKEN in your environment variables.' },
-      { status: 500 }
-    );
-  }
-
   // Get maxResults from query parameter, default to 50
   const { searchParams } = new URL(request.url);
   const maxResults = parseInt(searchParams.get('maxResults') || '50', 10);
   const limit = Math.min(Math.max(maxResults, 1), 100); // Clamp between 1 and 100
 
-  // Log environment check (without exposing sensitive data)
-  console.log('Jira API - Environment check:', {
-    hasDomain: !!JIRA_DOMAIN,
-    hasEmail: !!JIRA_EMAIL,
-    hasToken: !!JIRA_API_TOKEN,
-    domain: JIRA_DOMAIN ? `${JIRA_DOMAIN.substring(0, 5)}...` : 'missing',
-  });
-
   try {
-    // Try multiple JQL approaches - currentUser() might work, but email might be needed
-    // Try currentUser() with sprint filter first (works in some Jira setups, but can fail in Vercel)
+    // Try multiple JQL approaches
+    let data: any = null;
+    let response: Response;
+
+    // First, try with sprint filter and currentUser()
     let jql = `sprint in openSprints() AND assignee = currentUser() ORDER BY updated DESC`;
     let encodedJql = encodeURIComponent(jql);
-
-    console.log('Jira API - Trying query with currentUser():', {
-      jql: jql,
-      maxResults: limit,
-    });
-
-    // Use the /rest/api/3/search/jql endpoint (original working endpoint)
     let apiUrl = `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${encodedJql}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`;
-    
-    let response = await fetch(apiUrl, {
+
+    response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         Authorization: `Basic ${Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64')}`,
@@ -52,20 +32,12 @@ export async function GET(request: Request) {
       },
     });
 
-    let data: any = null;
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Jira API error (first query):', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorText.substring(0, 500), // Limit error text length
-        url: `https://${JIRA_DOMAIN}/rest/api/3/search/jql`,
-      });
-      
-      // For auth/permission errors, throw immediately
+    if (response.ok) {
+      data = await response.json();
+    } else {
+      // If first query failed, try fallback queries
       if (response.status === 401) {
-        throw new Error('Jira authentication failed. Please check your JIRA_EMAIL and JIRA_API_TOKEN.');
+        throw new Error('Jira authentication failed. Please check your credentials.');
       }
       if (response.status === 403) {
         throw new Error('Jira access forbidden. Please check your API token permissions.');
@@ -73,30 +45,16 @@ export async function GET(request: Request) {
       if (response.status === 404) {
         throw new Error(`Jira domain not found. Please check your JIRA_DOMAIN: ${JIRA_DOMAIN}`);
       }
-      // For other errors (like 400 JQL errors), log and try fallbacks instead of throwing
       console.log('Jira API - First query failed, will try fallback queries');
-    } else {
-      data = await response.json();
-
-      // Log response for debugging
-      console.log('Jira API - Response (currentUser):', {
-        total: data.total || 0,
-        issuesCount: data.issues?.length || 0,
-        hasIssues: !!data.issues,
-      });
     }
 
     // If first query failed or no results, try different approaches
     if (!data || !data.issues || data.issues.length === 0) {
-      console.log('Jira API - No results with currentUser(), trying fallbacks...');
-      
-      // First, try without sprint filter to see if user has any tasks at all
+      // Try without sprint filter
       const noSprintJql = `assignee = currentUser() ORDER BY updated DESC`;
       const noSprintEncoded = encodeURIComponent(noSprintJql);
       const noSprintUrl = `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${noSprintEncoded}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`;
-      
-      console.log('Jira API - Trying without sprint filter:', { jql: noSprintJql });
-      
+
       response = await fetch(noSprintUrl, {
         method: 'GET',
         headers: {
@@ -107,23 +65,33 @@ export async function GET(request: Request) {
 
       if (response.ok) {
         data = await response.json();
-        console.log('Jira API - Response (no sprint filter):', {
-          total: data.total || 0,
-          issuesCount: data.issues?.length || 0,
+      }
+
+      // If still no results, try with email instead of currentUser()
+      if (!data || !data.issues || data.issues.length === 0) {
+        const emailJql = `sprint in openSprints() AND assignee = "${JIRA_EMAIL}" ORDER BY updated DESC`;
+        const emailEncoded = encodeURIComponent(emailJql);
+        const emailUrl = `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${emailEncoded}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`;
+
+        response = await fetch(emailUrl, {
+          method: 'GET',
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64')}`,
+            Accept: 'application/json',
+          },
         });
-        
-        // If we got results without sprint filter, use those (might be from closed sprints or no sprint)
-        if (data.issues && data.issues.length > 0) {
-          console.log('Jira API - Found tasks without sprint filter, using those');
-        } else {
-          // Try with email directly (with sprint filter)
-          const emailJql = `sprint in openSprints() AND assignee = "${JIRA_EMAIL}" ORDER BY updated DESC`;
-          const emailEncoded = encodeURIComponent(emailJql);
-          const emailUrl = `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${emailEncoded}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`;
-          
-          console.log('Jira API - Trying with email:', { jql: emailJql });
-          
-          response = await fetch(emailUrl, {
+
+        if (response.ok) {
+          data = await response.json();
+        }
+
+        // Last fallback: email without sprint filter
+        if (!data || !data.issues || data.issues.length === 0) {
+          const emailNoSprintJql = `assignee = "${JIRA_EMAIL}" ORDER BY updated DESC`;
+          const emailNoSprintEncoded = encodeURIComponent(emailNoSprintJql);
+          const emailNoSprintUrl = `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${emailNoSprintEncoded}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`;
+
+          response = await fetch(emailNoSprintUrl, {
             method: 'GET',
             headers: {
               Authorization: `Basic ${Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64')}`,
@@ -133,35 +101,6 @@ export async function GET(request: Request) {
 
           if (response.ok) {
             data = await response.json();
-            console.log('Jira API - Response (email with sprint):', {
-              total: data.total || 0,
-              issuesCount: data.issues?.length || 0,
-            });
-            
-            // If still no results, try email without sprint filter
-            if (!data.issues || data.issues.length === 0) {
-              const emailNoSprintJql = `assignee = "${JIRA_EMAIL}" ORDER BY updated DESC`;
-              const emailNoSprintEncoded = encodeURIComponent(emailNoSprintJql);
-              const emailNoSprintUrl = `https://${JIRA_DOMAIN}/rest/api/3/search/jql?jql=${emailNoSprintEncoded}&maxResults=${limit}&fields=summary,status,priority,assignee,updated,issuetype`;
-              
-              console.log('Jira API - Trying email without sprint filter:', { jql: emailNoSprintJql });
-              
-              response = await fetch(emailNoSprintUrl, {
-                method: 'GET',
-                headers: {
-                  Authorization: `Basic ${Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64')}`,
-                  Accept: 'application/json',
-                },
-              });
-              
-              if (response.ok) {
-                data = await response.json();
-                console.log('Jira API - Response (email no sprint):', {
-                  total: data.total || 0,
-                  issuesCount: data.issues?.length || 0,
-                });
-              }
-            }
           }
         }
       }
@@ -169,10 +108,6 @@ export async function GET(request: Request) {
 
     // Handle case where issues might be undefined or empty
     if (!data || !data.issues || !Array.isArray(data.issues)) {
-      console.warn('Jira API - No issues in response after all attempts:', {
-        dataKeys: data ? Object.keys(data) : [],
-        responseStructure: data ? JSON.stringify(data).substring(0, 200) : 'null',
-      });
       return NextResponse.json({ tasks: [] });
     }
 
@@ -211,24 +146,12 @@ export async function GET(request: Request) {
       return new Date(b.updated).getTime() - new Date(a.updated).getTime();
     });
 
-    return NextResponse.json({ tasks: sortedTasks }, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      },
-    });
+    return NextResponse.json({ tasks: sortedTasks });
   } catch (error: any) {
     console.error('Jira API error:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to fetch Jira tasks' },
-      { 
-        status: 500,
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        },
-      }
+      { status: 500 }
     );
   }
 }
-

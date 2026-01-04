@@ -95,7 +95,7 @@ export default function JiraTasksSection() {
             {error}
           </p>
           <p className="text-sm text-red-500 dark:text-red-500">
-            Make sure JIRA_DOMAIN, JIRA_EMAIL, and JIRA_API_TOKEN are set in your environment variables
+            Please check your Jira credentials in the component code
           </p>
         </div>
       ) : tasks.length === 0 ? (
