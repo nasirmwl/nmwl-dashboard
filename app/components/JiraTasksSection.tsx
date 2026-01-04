@@ -23,7 +23,7 @@ export default function JiraTasksSection() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/jira');
+      const response = await fetch('/api/jira?maxResults=50');
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Failed to fetch Jira tasks (${response.status})`);
