@@ -1,3 +1,4 @@
+import DailyFocusSection from './components/DailyFocusSection';
 import JiraTasksSection from './components/JiraTasksSection';
 import NotesSection from './components/NotesSection';
 import PromisesSection from './components/PromisesSection';
@@ -16,6 +17,11 @@ export default function Home() {
           {/* Notes Section - Middle */}
           <section>
             <NotesSection />
+          </section>
+
+          {/* Daily Focus Section */}
+          <section>
+            <DailyFocusSection />
           </section>
 
           {/* Promises Section */}
