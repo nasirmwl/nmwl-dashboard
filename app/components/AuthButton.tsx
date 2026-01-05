@@ -52,11 +52,8 @@ export default function AuthButton() {
   if (user) {
     return (
       <div className="flex items-center gap-2 sm:gap-3">
-        <div className="flex items-center gap-1.5 sm:gap-2 text-sm text-gray-700 dark:text-gray-300">
-          <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold text-xs sm:text-base shrink-0">
-            {user.email?.charAt(0).toUpperCase() || 'U'}
-          </div>
-          <span className="hidden md:inline truncate max-w-[150px] lg:max-w-none">{user.email}</span>
+        <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold text-xs sm:text-base shrink-0">
+          {user.email?.charAt(0).toUpperCase() || 'U'}
         </div>
         <button
           onClick={handleLogout}

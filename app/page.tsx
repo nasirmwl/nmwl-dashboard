@@ -1,5 +1,4 @@
 import DailyFocusSection from './components/DailyFocusSection';
-import Header from './components/Header';
 import JiraTasksSection from './components/JiraTasksSection';
 import NotesSection from './components/NotesSection';
 import PodcastsSection from './components/PodcastsSection';
@@ -12,7 +11,6 @@ export default function Home() {
   return (
     <ProtectedPage>
       <div className="min-h-screen bg-white dark:bg-gray-900">
-        <Header />
         <main className="container mx-auto px-4 sm:px-4 py-6 sm:py-8 max-w-7xl">
           <div className="space-y-6 sm:space-y-8">
             {/* Notes and Promises Side by Side on Desktop */}

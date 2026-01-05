@@ -1,8 +1,9 @@
 'use client';
 
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
 import { format } from 'date-fns';
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface HourlyWeather {
   time: Date;
