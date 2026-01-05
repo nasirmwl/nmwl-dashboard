@@ -1,8 +1,9 @@
 'use client';
 
-import { ExternalLink, RefreshCw } from 'lucide-react';
+import { Edit2, ExternalLink, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import Modal from './Modal';
 import { format } from 'date-fns';
 
 interface JiraTask {
@@ -15,10 +16,25 @@ interface JiraTask {
   url: string;
 }
 
+interface Transition {
+  id: string;
+  name: string;
+  to: {
+    id: string;
+    name: string;
+  };
+}
+
 export default function JiraTasksSection() {
   const [tasks, setTasks] = useState<JiraTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<JiraTask | null>(null);
+  const [transitions, setTransitions] = useState<Transition[]>([]);
+  const [loadingTransitions, setLoadingTransitions] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [selectedTransitionId, setSelectedTransitionId] = useState<string>('');
 
   const fetchTasks = async () => {
     setLoading(true);
@@ -31,8 +47,9 @@ export default function JiraTasksSection() {
       }
       const data = await response.json();
       setTasks(data.tasks || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load Jira tasks');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load Jira tasks';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -44,6 +61,67 @@ export default function JiraTasksSection() {
     const interval = setInterval(fetchTasks, 300000);
     return () => clearInterval(interval);
   }, []);
+
+  const openEditModal = async (task: JiraTask) => {
+    setEditingTask(task);
+    setSelectedTransitionId('');
+    setIsModalOpen(true);
+    setLoadingTransitions(true);
+    setTransitions([]);
+
+    try {
+      const response = await fetch(`/api/jira/transitions?issueKey=${task.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch transitions');
+      }
+      const data = await response.json();
+      setTransitions(data.transitions || []);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load available status transitions';
+      console.error('Error fetching transitions:', err);
+      setError(errorMessage);
+    } finally {
+      setLoadingTransitions(false);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingTask(null);
+    setTransitions([]);
+    setSelectedTransitionId('');
+  };
+
+  const updateStatus = async () => {
+    if (!editingTask || !selectedTransitionId) return;
+
+    setUpdatingStatus(true);
+    try {
+      const response = await fetch('/api/jira/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          issueKey: editingTask.id,
+          transitionId: selectedTransitionId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update status');
+      }
+
+      // Refresh tasks after successful update
+      await fetchTasks();
+      closeModal();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update status';
+      console.error('Error updating status:', err);
+      setError(errorMessage);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   const getPriorityColor = (priority: string) => {
     const lower = priority.toLowerCase();
@@ -108,17 +186,14 @@ export default function JiraTasksSection() {
       ) : (
         <div className="space-y-3">
           {tasks.map((task) => (
-            <a
+            <div
               key={task.id}
-              href={task.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block group"
+              className="group"
             >
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="text-sm font-mono text-gray-600 dark:text-gray-400">
                         {task.id}
                       </span>
@@ -137,20 +212,108 @@ export default function JiraTasksSection() {
                         {task.status}
                       </span>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                       {task.summary}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Updated {format(new Date(task.updated), 'MMM d, yyyy HH:mm')}
                     </p>
                   </div>
-                  <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 shrink-0 transition-colors" />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditModal(task);
+                      }}
+                      className="p-3.5 md:p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+                      aria-label="Edit status"
+                    >
+                      <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
+                    </button>
+                    <a
+                      href={task.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3.5 md:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+                      aria-label="Open in Jira"
+                    >
+                      <ExternalLink className="w-5 h-5 md:w-4 md:h-4" />
+                    </a>
+                  </div>
                 </div>
               </div>
-            </a>
+            </div>
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={editingTask ? `Change Status: ${editingTask.id}` : 'Change Status'}
+      >
+        <div className="space-y-4">
+          {editingTask && (
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Task:</span> {editingTask.summary}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Current Status:</span>{' '}
+                <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(editingTask.status)}`}>
+                  {editingTask.status}
+                </span>
+              </p>
+            </div>
+          )}
+
+          {loadingTransitions ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : transitions.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <p>No available status transitions found.</p>
+              <p className="text-sm mt-2">You may not have permission to change the status of this task.</p>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select New Status
+              </label>
+              <select
+                value={selectedTransitionId}
+                onChange={(e) => setSelectedTransitionId(e.target.value)}
+                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 text-base md:text-sm"
+              >
+                <option value="">-- Select a status --</option>
+                {transitions.map((transition) => (
+                  <option key={transition.id} value={transition.id}>
+                    {transition.name} → {transition.to.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+            <button
+              onClick={closeModal}
+              disabled={updatingStatus}
+              className="px-5 py-3.5 md:px-4 md:py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={updateStatus}
+              disabled={!selectedTransitionId || updatingStatus}
+              className="px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {updatingStatus ? 'Updating...' : 'Update Status'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
