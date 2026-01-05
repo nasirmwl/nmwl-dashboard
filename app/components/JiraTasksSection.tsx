@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { ExternalLink, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
 import { format } from 'date-fns';
 
 interface JiraTask {

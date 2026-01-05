@@ -47,3 +47,4 @@ If you want to keep RLS enabled, you need to create policies. Go to **Authentica
 
 **Recommendation:** For a personal project, Option 1 (disable RLS) is simpler and perfectly fine.
 
+
