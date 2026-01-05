@@ -109,7 +109,7 @@ export default function DailyFocusSection() {
 
   if (!isClient || loading) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
         <div className="animate-pulse h-32" />
       </div>
     );
@@ -117,15 +117,17 @@ export default function DailyFocusSection() {
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Important Events</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Important Events</h2>
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+            aria-label="Add Event"
           >
-            <Plus className="w-4 h-4" />
-            Add Event
+            <Plus className="w-5 h-5 md:w-4 md:h-4" />
+            <span className="hidden md:inline">Add Event</span>
+            <span className="md:hidden">Add Event</span>
           </button>
         </div>
 
@@ -154,15 +156,15 @@ export default function DailyFocusSection() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => openEditModal(item)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                    className="p-3.5 md:p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
                   </button>
                   <button
                     onClick={() => deleteFocusItem(item.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    className="p-3.5 md:p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5 md:w-4 md:h-4" />
                   </button>
                 </div>
               </div>
@@ -199,16 +201,16 @@ export default function DailyFocusSection() {
               className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100"
             />
           </div>
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="px-5 py-3.5 md:px-4 md:py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               onClick={saveFocusItem}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
               {editingItem ? 'Update' : 'Create'}
             </button>

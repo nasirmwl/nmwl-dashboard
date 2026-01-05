@@ -105,7 +105,7 @@ export default function WeatherCard({ current, hourly, label, date }: WeatherCar
       <div className="mt-2">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center justify-between w-full cursor-pointer select-none hover:bg-white/30 dark:hover:bg-gray-800/30 rounded-lg p-2 -mx-2 transition-colors"
+          className="flex items-center justify-between w-full cursor-pointer select-none hover:bg-white/30 dark:hover:bg-gray-800/30 rounded-lg p-3 md:p-2 -mx-2 transition-colors"
         >
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Hourly Forecast

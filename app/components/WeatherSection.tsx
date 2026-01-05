@@ -122,7 +122,7 @@ export default function WeatherSection() {
           <button
             onClick={fetchWeather}
             disabled={loading}
-            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 text-xs whitespace-nowrap"
+            className="px-5 py-2.5 md:px-3 md:py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm md:text-xs whitespace-nowrap"
           >
             {loading ? 'Loading...' : 'Retry'}
           </button>
@@ -191,7 +191,7 @@ export default function WeatherSection() {
       <div className="mb-2">
         <button
           onClick={() => setTodayHourlyOpen(!todayHourlyOpen)}
-          className="flex items-center justify-between w-full cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1.5 -mx-1.5 transition-colors"
+          className="flex items-center justify-between w-full cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-3 md:p-1.5 -mx-1.5 transition-colors"
         >
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
             Hourly Forecast
@@ -262,7 +262,7 @@ export default function WeatherSection() {
       <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
         <button
           onClick={() => setTomorrowOpen(!tomorrowOpen)}
-          className="flex items-center justify-between w-full cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1.5 -mx-1.5 transition-colors"
+          className="flex items-center justify-between w-full cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-3 md:p-1.5 -mx-1.5 transition-colors"
         >
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">

@@ -71,16 +71,18 @@ export default function JiraTasksSection() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Current Sprint Tasks</h2>
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Current Sprint Tasks</h2>
         <button
           onClick={fetchTasks}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50 text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+          aria-label="Refresh tasks"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
+          <RefreshCw className={`w-5 h-5 md:w-4 md:h-4 ${loading ? 'animate-spin' : ''}`} />
+          <span className="hidden md:inline">Refresh</span>
+          <span className="md:hidden">Refresh</span>
         </button>
       </div>
 

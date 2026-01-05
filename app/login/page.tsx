@@ -53,7 +53,7 @@ export default function LoginPage() {
         <div className="mt-8">
           <button
             onClick={handleLogin}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 md:px-4 md:py-3 border border-transparent rounded-md shadow-sm text-base md:text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path

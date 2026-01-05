@@ -13,8 +13,8 @@ export default function Home() {
     <ProtectedPage>
       <div className="min-h-screen bg-white dark:bg-gray-900">
         <Header />
-        <main className="container mx-auto px-4 py-8 max-w-7xl">
-          <div className="space-y-8">
+        <main className="container mx-auto px-4 sm:px-4 py-6 sm:py-8 max-w-7xl">
+          <div className="space-y-6 sm:space-y-8">
             {/* Notes and Promises Side by Side on Desktop */}
             <section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
