@@ -1,7 +1,8 @@
 'use client';
 
+import { Edit2, Plus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Plus, X, Edit2 } from 'lucide-react';
+
 import Modal from './Modal';
 
 interface Promise {

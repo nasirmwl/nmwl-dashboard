@@ -1,9 +1,10 @@
 'use client';
 
+import { Calendar, Edit2, Plus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Plus, X, Edit2, Calendar } from 'lucide-react';
-import { format } from 'date-fns';
+
 import Modal from './Modal';
+import { format } from 'date-fns';
 
 interface DailyFocus {
   id: string;
