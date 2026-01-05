@@ -42,6 +42,10 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/auth/unauthorized`)
       }
 
+      // Log the matched user from allowed_users table
+      const matchedUser = allowedUsers[0]
+      console.log(`Authorized user matched:`, { allowed_user_id: matchedUser.id, allowed_user_github_username: matchedUser.github_username, allowed_user_email: matchedUser.email, allowed_user_name: matchedUser.name, attempting_github_username: githubUsername, attempting_email: email })
+
       // User is authorized, proceed with redirect
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'

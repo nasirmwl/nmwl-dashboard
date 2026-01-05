@@ -1,36 +1,44 @@
 import DailyFocusSection from './components/DailyFocusSection';
+import Header from './components/Header';
 import JiraTasksSection from './components/JiraTasksSection';
 import NotesSection from './components/NotesSection';
+import PodcastsSection from './components/PodcastsSection';
 import PromisesSection from './components/PromisesSection';
-import WeatherSection from './components/WeatherSection';
-import Header from './components/Header';
 import ProtectedPage from './components/ProtectedPage';
+import WeatherSection from './components/WeatherSection';
+import YoutubeLinksSection from './components/YoutubeLinksSection';
 
 export default function Home() {
   return (
     <ProtectedPage>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-7xl">
           <div className="space-y-8">
-            {/* Weather Section - Top */}
+            {/* Notes and Promises Side by Side on Desktop */}
             <section>
-              <WeatherSection />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <PromisesSection />
+                <NotesSection />
+              </div>
             </section>
 
-            {/* Notes Section - Middle */}
-            <section>
-              <NotesSection />
-            </section>
-
-            {/* Daily Focus Section */}
+            {/* Daily Focus Section (Imp Events) */}
             <section>
               <DailyFocusSection />
             </section>
 
-            {/* Promises Section */}
+            {/* Podcasts and YouTube Links Side by Side on Desktop */}
             <section>
-              <PromisesSection />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <PodcastsSection />
+                <YoutubeLinksSection />
+              </div>
+            </section>
+
+            {/* Weather Section */}
+            <section>
+              <WeatherSection />
             </section>
 
             {/* Jira Tasks Section - Bottom */}
