@@ -17,7 +17,7 @@ OAuth authentication with Supabase has been successfully implemented for your Pe
    - `app/components/AuthButton.tsx` - Login/logout button with user info
    - `app/components/Header.tsx` - Header component with authentication button
    - `app/components/ProtectedPage.tsx` - Wrapper component that protects pages requiring authentication
-   - `app/login/page.tsx` - Login page with Google and GitHub OAuth options
+   - `app/login/page.tsx` - Login page with GitHub OAuth
 
 ### 4. **Middleware**
    - `middleware.ts` - Refreshes user sessions on every request
@@ -37,9 +37,9 @@ OAuth authentication with Supabase has been successfully implemented for your Pe
      ```
    - See `AUTH_SETUP.md` for detailed instructions
 
-2. **Configure OAuth Providers in Supabase** (Required)
-   - Enable Google OAuth (and/or GitHub) in Supabase dashboard
-   - Set up OAuth credentials with Google/GitHub
+2. **Configure GitHub OAuth in Supabase** (Required)
+   - Enable GitHub OAuth in Supabase dashboard
+   - Set up OAuth credentials with GitHub
    - Configure callback URLs
    - See `AUTH_SETUP.md` for step-by-step instructions
 
@@ -49,8 +49,7 @@ OAuth authentication with Supabase has been successfully implemented for your Pe
 
 ## Features
 
-✅ Google OAuth authentication
-✅ GitHub OAuth authentication (optional)
+✅ GitHub OAuth authentication
 ✅ Automatic session management
 ✅ Protected routes
 ✅ User session persistence
@@ -93,7 +92,7 @@ Once environment variables are configured:
 1. Start the development server: `npm run dev`
 2. Navigate to `http://localhost:3000`
 3. You should be redirected to `/login`
-4. Click "Login with Google" (or GitHub)
+4. Click "Continue with GitHub"
 5. Complete OAuth flow
 6. You'll be redirected back to the dashboard
 7. Your email should appear in the header

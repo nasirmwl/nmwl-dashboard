@@ -1,9 +1,10 @@
 'use client'
 
+import { LogIn, LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
+
 import { User } from '@supabase/supabase-js'
-import { LogOut, LogIn } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
 
 export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null)
@@ -28,7 +29,7 @@ export default function AuthButton() {
   }, [supabase])
 
   const handleLogin = async () => {
-    const response = await fetch('/auth/login?provider=google', {
+    const response = await fetch('/auth/login?provider=github', {
       method: 'POST',
     })
     const { url } = await response.json()
@@ -74,7 +75,7 @@ export default function AuthButton() {
       className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors"
     >
       <LogIn className="w-4 h-4" />
-      Login with Google
+      Login with GitHub
     </button>
   )
 }

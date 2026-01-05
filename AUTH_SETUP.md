@@ -1,11 +1,11 @@
 # Authentication Setup Guide
 
-This project uses Supabase Authentication with OAuth providers (Google and GitHub).
+This project uses Supabase Authentication with GitHub OAuth.
 
 ## Prerequisites
 
 1. A Supabase account and project (https://supabase.com)
-2. OAuth credentials from Google and/or GitHub (optional, but recommended)
+2. OAuth credentials from GitHub
 
 ## Setup Steps
 
@@ -30,23 +30,7 @@ You can find these values in your Supabase project settings:
 - Go to **Settings** → **API**
 - Copy the **Project URL** and **anon public** key
 
-### 2. Enable OAuth Providers in Supabase
-
-#### Google OAuth Setup
-
-1. Go to your Supabase project dashboard
-2. Navigate to **Authentication** → **Providers**
-3. Enable **Google** provider
-4. You'll need to:
-   - Create a Google Cloud Project (if you don't have one)
-   - Create OAuth 2.0 credentials in Google Cloud Console
-   - Add your Supabase callback URL: `https://your-project.supabase.co/auth/v1/callback`
-   - Copy the **Client ID** and **Client Secret** to Supabase
-   - Add authorized redirect URIs in Google Cloud Console:
-     - `https://your-project.supabase.co/auth/v1/callback`
-     - `http://localhost:3000/auth/callback` (for local development)
-
-#### GitHub OAuth Setup (Optional)
+### 2. Enable GitHub OAuth in Supabase
 
 1. Go to your Supabase project dashboard
 2. Navigate to **Authentication** → **Providers**
@@ -74,7 +58,7 @@ The application will be available at `http://localhost:3000`
 
 1. Visit `http://localhost:3000`
 2. You'll be redirected to the login page
-3. Click "Login with Google" (or GitHub if configured)
+3. Click "Continue with GitHub"
 4. Complete the OAuth flow
 5. You'll be redirected back to the dashboard
 
@@ -112,7 +96,7 @@ export async function GET() {
 ### "Invalid login credentials" or OAuth redirect errors
 
 - Verify your Site URL and Redirect URLs are correctly configured in Supabase
-- Make sure your OAuth provider (Google/GitHub) has the correct callback URLs
+- Make sure GitHub OAuth has the correct callback URLs
 - Check that environment variables are set correctly
 
 ### Session not persisting
