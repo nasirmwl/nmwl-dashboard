@@ -39,10 +39,11 @@ Replace the values with actual GitHub usernames and/or emails.
 2. Select the `allowed_users` table
 3. Click **Insert** → **Insert row**
 4. Fill in:
+5. 
    - `github_username` (optional but recommended for GitHub OAuth)
    - `email` (optional but recommended)
    - `name` (optional, for reference)
-5. Click **Save**
+6. Click **Save**
 
 **Note:** You must provide at least one of `github_username` or `email`.
 
