@@ -379,14 +379,13 @@ export default function SpendingSection() {
                           },
                         },
                         x: {
+                          type: 'category',
                           ticks: {
                             color: '#6b7280',
                           },
                           grid: {
                             display: false,
                           },
-                          categoryPercentage: 0.5,
-                          barPercentage: 0.7,
                         },
                       },
                     }}
@@ -623,11 +622,11 @@ export default function SpendingSection() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Category Total</span>
                 <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  ₼{selectedCategory.total.toFixed(2)}
+                  ₼{'total' in selectedCategory ? selectedCategory.total.toFixed(2) : selectedCategorySpending.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}
                 </span>
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
-                {selectedCategory.count} {selectedCategory.count === 1 ? 'entry' : 'entries'}
+                {'count' in selectedCategory ? selectedCategory.count : selectedCategorySpending.length} {('count' in selectedCategory ? selectedCategory.count : selectedCategorySpending.length) === 1 ? 'entry' : 'entries'}
               </div>
               <div className="mt-2">
                 <button
