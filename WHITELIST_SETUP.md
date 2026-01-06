@@ -175,3 +175,4 @@ To find a user's GitHub username:
    - Have someone not in the whitelist attempt to log in
    - They should see the "Access Denied" page
 
+

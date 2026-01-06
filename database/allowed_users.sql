@@ -38,3 +38,4 @@ CREATE POLICY "Authenticated users can read allowed_users" ON allowed_users
 --   ('your-github-username', 'your-email@example.com', 'Your Name'),
 --   ('another-username', 'another@example.com', 'Another User');
 
+

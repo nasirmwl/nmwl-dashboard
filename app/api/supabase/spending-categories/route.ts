@@ -9,13 +9,13 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const dynamic = 'force-dynamic';
 
-// GET - Fetch all podcasts
+// GET - Fetch all spending categories
 export async function GET() {
   try {
     const { data, error } = await supabase
-      .from('podcasts')
+      .from('spending_categories')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('name', { ascending: true });
 
     if (error) {
       console.error('Supabase error:', error);
@@ -24,86 +24,105 @@ export async function GET() {
 
     const items = data.map((item: any) => ({
       id: item.id.toString(),
-      title: item.title || '',
-      link: item.link || '',
-      description: item.description || '',
+      name: item.name,
+      description: item.description,
+      created_at: item.created_at,
     }));
 
     return NextResponse.json({ items });
   } catch (error: any) {
-    console.error('Podcasts fetch error:', error);
+    console.error('Spending categories fetch error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// POST - Create a new podcast
+// POST - Create a new spending category
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, link, description } = body;
+    const { name, description } = body;
 
-    if (!title || !link) {
-      return NextResponse.json({ error: 'Title and link are required' }, { status: 400 });
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
     }
 
     const { data, error } = await supabase
-      .from('podcasts')
-      .insert([{ title, link, description: description || null }])
+      .from('spending_categories')
+      .insert([{ name: name.trim(), description: description?.trim() || null }])
       .select()
       .single();
 
     if (error) {
       console.error('Supabase error:', error);
+      // Check if it's a unique constraint violation
+      if (error.code === '23505') {
+        return NextResponse.json({ error: 'Category with this name already exists' }, { status: 400 });
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({
       id: data.id.toString(),
-      title: data.title || '',
-      link: data.link || '',
-      description: data.description || '',
+      name: data.name,
+      description: data.description,
+      created_at: data.created_at,
     });
   } catch (error: any) {
-    console.error('Podcasts create error:', error);
+    console.error('Spending category create error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// PUT - Update a podcast
+// PUT - Update a spending category
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, title, link, description } = body;
+    const { id, name, description } = body;
 
-    if (!id || !title || !link) {
-      return NextResponse.json({ error: 'Id, title, and link are required' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'Id is required' }, { status: 400 });
+    }
+
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
+    }
+
+    const updateData: any = {
+      name: name.trim(),
+    };
+
+    if (description !== undefined) {
+      updateData.description = description?.trim() || null;
     }
 
     const { data, error } = await supabase
-      .from('podcasts')
-      .update({ title, link, description: description || null })
+      .from('spending_categories')
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
 
     if (error) {
       console.error('Supabase error:', error);
+      if (error.code === '23505') {
+        return NextResponse.json({ error: 'Category with this name already exists' }, { status: 400 });
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({
       id: data.id.toString(),
-      title: data.title || '',
-      link: data.link || '',
-      description: data.description || '',
+      name: data.name,
+      description: data.description,
+      created_at: data.created_at,
     });
   } catch (error: any) {
-    console.error('Podcasts update error:', error);
+    console.error('Spending category update error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// DELETE - Delete a podcast
+// DELETE - Delete a spending category
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -114,7 +133,7 @@ export async function DELETE(request: Request) {
     }
 
     const { error } = await supabase
-      .from('podcasts')
+      .from('spending_categories')
       .delete()
       .eq('id', id);
 
@@ -125,7 +144,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Podcasts delete error:', error);
+    console.error('Spending category delete error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

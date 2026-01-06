@@ -4,6 +4,7 @@ import NotesSection from './components/NotesSection';
 import PodcastsSection from './components/PodcastsSection';
 import PromisesSection from './components/PromisesSection';
 import ProtectedPage from './components/ProtectedPage';
+import SpendingSection from './components/SpendingSection';
 import WeatherSection from './components/WeatherSection';
 import YoutubeLinksSection from './components/YoutubeLinksSection';
 
@@ -32,6 +33,11 @@ export default function Home() {
                 <PodcastsSection />
                 <YoutubeLinksSection />
               </div>
+            </section>
+
+            {/* Spending Section */}
+            <section>
+              <SpendingSection />
             </section>
 
             {/* Weather Section */}

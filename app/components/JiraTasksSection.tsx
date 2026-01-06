@@ -1,6 +1,6 @@
 'use client';
 
-import { Edit2, ExternalLink, RefreshCw } from 'lucide-react';
+import { Edit2, ExternalLink, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import Modal from './Modal';
@@ -35,6 +35,7 @@ export default function JiraTasksSection() {
   const [loadingTransitions, setLoadingTransitions] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [selectedTransitionId, setSelectedTransitionId] = useState<string>('');
+  const [isVisible, setIsVisible] = useState(true);
 
   const fetchTasks = async () => {
     setLoading(true);
@@ -56,11 +57,23 @@ export default function JiraTasksSection() {
   };
 
   useEffect(() => {
+    // Load visibility preference from localStorage (default to true)
+    const savedVisibility = localStorage.getItem('jiraSprintTasksVisible');
+    if (savedVisibility !== null) {
+      setIsVisible(savedVisibility === 'true');
+    }
+    
     fetchTasks();
     // Refresh every 5 minutes
     const interval = setInterval(fetchTasks, 300000);
     return () => clearInterval(interval);
   }, []);
+
+  const toggleVisibility = () => {
+    const newVisibility = !isVisible;
+    setIsVisible(newVisibility);
+    localStorage.setItem('jiraSprintTasksVisible', String(newVisibility));
+  };
 
   const openEditModal = async (task: JiraTask) => {
     setEditingTask(task);
@@ -152,19 +165,44 @@ export default function JiraTasksSection() {
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Current Sprint Tasks</h2>
-        <button
-          onClick={fetchTasks}
-          disabled={loading}
-          className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50 text-base md:text-sm min-h-[44px] w-full sm:w-auto"
-          aria-label="Refresh tasks"
-        >
-          <RefreshCw className={`w-5 h-5 md:w-4 md:h-4 ${loading ? 'animate-spin' : ''}`} />
-          <span className="hidden md:inline">Refresh</span>
-          <span className="md:hidden">Refresh</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleVisibility}
+            className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+            aria-label={isVisible ? 'Hide tasks' : 'Show tasks'}
+          >
+            {isVisible ? (
+              <>
+                <EyeOff className="w-5 h-5 md:w-4 md:h-4" />
+                <span className="hidden md:inline">Hide</span>
+                <span className="md:hidden">Hide</span>
+              </>
+            ) : (
+              <>
+                <Eye className="w-5 h-5 md:w-4 md:h-4" />
+                <span className="hidden md:inline">Show</span>
+                <span className="md:hidden">Show</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={fetchTasks}
+            disabled={loading}
+            className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50 text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+            aria-label="Refresh tasks"
+          >
+            <RefreshCw className={`w-5 h-5 md:w-4 md:h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden md:inline">Refresh</span>
+            <span className="md:hidden">Refresh</span>
+          </button>
+        </div>
       </div>
 
-      {loading && tasks.length === 0 ? (
+      {!isVisible ? (
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          <p>Sprint tasks are hidden. Click &quot;Show&quot; to view them.</p>
+        </div>
+      ) : loading && tasks.length === 0 ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 animate-pulse h-20" />
