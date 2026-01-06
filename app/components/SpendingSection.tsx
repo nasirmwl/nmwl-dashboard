@@ -1,7 +1,7 @@
 'use client';
 
-import { Edit2, Plus, X, DollarSign, ChevronRight } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Edit2, Plus, X, DollarSign, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,6 +15,7 @@ import { Bar } from 'react-chartjs-2';
 
 import Modal from './Modal';
 import { format } from 'date-fns';
+import { useSectionToggle } from '../hooks/useSectionToggle';
 
 ChartJS.register(
   CategoryScale,
@@ -58,6 +59,7 @@ export default function SpendingSection() {
   const [modalSpentAt, setModalSpentAt] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryDescription, setNewCategoryDescription] = useState('');
+  const [isVisible, setIsVisible] = useState(true);
 
   const fetchSpending = async () => {
     try {
@@ -84,10 +86,24 @@ export default function SpendingSection() {
   };
 
   useEffect(() => {
+    // Load visibility preference from localStorage (default to true)
+    const savedVisibility = localStorage.getItem('spendingSectionVisible');
+    if (savedVisibility !== null) {
+      setIsVisible(savedVisibility === 'true');
+    }
+    
     setIsClient(true);
     fetchSpending();
     fetchCategories();
   }, []);
+
+  const toggleVisibility = useCallback(() => {
+    const newVisibility = !isVisible;
+    setIsVisible(newVisibility);
+    localStorage.setItem('spendingSectionVisible', String(newVisibility));
+  }, [isVisible]);
+
+  useSectionToggle(toggleVisibility);
 
   const openAddModal = () => {
     setEditingSpending(null);
@@ -302,24 +318,49 @@ export default function SpendingSection() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Spending</h2>
-            {spending.length > 0 && (
+            {spending.length > 0 && isVisible && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Total: <span className="font-semibold text-gray-900 dark:text-gray-100">₼{totalAmount.toFixed(2)}</span>
               </p>
             )}
           </div>
-          <button
-            onClick={openAddModal}
-            className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
-            aria-label="Add Spending"
-          >
-            <Plus className="w-5 h-5 md:w-4 md:h-4" />
-            <span className="hidden md:inline">Add Spending</span>
-            <span className="md:hidden">Add Spending</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleVisibility}
+              className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+              aria-label={isVisible ? 'Hide spending' : 'Show spending'}
+            >
+              {isVisible ? (
+                <>
+                  <EyeOff className="w-5 h-5 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">Hide</span>
+                  <span className="md:hidden">Hide</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-5 h-5 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">Show</span>
+                  <span className="md:hidden">Show</span>
+                </>
+              )}
+            </button>
+            <button
+              onClick={openAddModal}
+              className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+              aria-label="Add Spending"
+            >
+              <Plus className="w-5 h-5 md:w-4 md:h-4" />
+              <span className="hidden md:inline">Add Spending</span>
+              <span className="md:hidden">Add Spending</span>
+            </button>
+          </div>
         </div>
 
-        {spending.length === 0 ? (
+        {!isVisible ? (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <p>Spending section is hidden. Click &quot;Show&quot; to view it.</p>
+          </div>
+        ) : spending.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             <DollarSign className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p>No spending entries yet. Click "Add Spending" to create one.</p>

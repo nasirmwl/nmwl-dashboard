@@ -1,10 +1,11 @@
 'use client';
 
 import { Edit2, ExternalLink, Eye, EyeOff, RefreshCw } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 import Modal from './Modal';
 import { format } from 'date-fns';
+import { useSectionToggle } from '../hooks/useSectionToggle';
 
 interface JiraTask {
   id: string;
@@ -69,11 +70,13 @@ export default function JiraTasksSection() {
     return () => clearInterval(interval);
   }, []);
 
-  const toggleVisibility = () => {
+  const toggleVisibility = useCallback(() => {
     const newVisibility = !isVisible;
     setIsVisible(newVisibility);
     localStorage.setItem('jiraSprintTasksVisible', String(newVisibility));
-  };
+  }, [isVisible]);
+
+  useSectionToggle(toggleVisibility);
 
   const openEditModal = async (task: JiraTask) => {
     setEditingTask(task);

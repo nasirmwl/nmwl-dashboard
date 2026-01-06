@@ -1,3 +1,5 @@
+'use client';
+
 import DailyFocusSection from './components/DailyFocusSection';
 import JiraTasksSection from './components/JiraTasksSection';
 import NotesSection from './components/NotesSection';
@@ -7,8 +9,11 @@ import ProtectedPage from './components/ProtectedPage';
 import SpendingSection from './components/SpendingSection';
 import WeatherSection from './components/WeatherSection';
 import YoutubeLinksSection from './components/YoutubeLinksSection';
+import { useGlobalToggleShortcut } from './hooks/useSectionToggle';
 
 export default function Home() {
+  useGlobalToggleShortcut();
+
   return (
     <ProtectedPage>
       <div className="min-h-screen bg-white dark:bg-gray-900">
