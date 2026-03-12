@@ -26,6 +26,7 @@ export async function GET() {
       id: item.id.toString(),
       title: item.title || '',
       link: item.link || '',
+      watched: item.watched === true,
     }));
 
     return NextResponse.json({ items });
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
       id: data.id.toString(),
       title: data.title || '',
       link: data.link || '',
+      watched: data.watched === true,
     });
   } catch (error: any) {
     console.error('Youtube links create error:', error);
@@ -77,9 +79,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Id, title, and link are required' }, { status: 400 });
     }
 
+    const watched = body.watched;
+    const updatePayload: Record<string, unknown> = { title, link };
+    if (typeof watched === 'boolean') updatePayload.watched = watched;
+
     const { data, error } = await supabase
       .from('youtube_links')
-      .update({ title, link })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single();
@@ -93,6 +99,7 @@ export async function PUT(request: Request) {
       id: data.id.toString(),
       title: data.title || '',
       link: data.link || '',
+      watched: data.watched === true,
     });
   } catch (error: any) {
     console.error('Youtube links update error:', error);

@@ -9,6 +9,7 @@ interface YoutubeLink {
   id: string;
   title: string;
   link: string;
+  watched?: boolean;
 }
 
 export default function YoutubeLinksSection() {
@@ -45,6 +46,25 @@ export default function YoutubeLinksSection() {
     setIsModalOpen(true);
   };
 
+  const toggleWatched = async (link: YoutubeLink) => {
+    const next = !(link.watched === true);
+    try {
+      const response = await fetch('/api/supabase/youtube-links', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: link.id,
+          title: link.title,
+          link: link.link,
+          watched: next,
+        }),
+      });
+      if (response.ok) await fetchYoutubeLinks();
+    } catch (error) {
+      console.error('Error toggling watched:', error);
+    }
+  };
+
   const openEditModal = (link: YoutubeLink) => {
     setEditingLink(link);
     setModalTitle(link.title);
@@ -74,6 +94,7 @@ export default function YoutubeLinksSection() {
             id: editingLink.id,
             title,
             link,
+            watched: editingLink.watched === true,
           }),
         });
         if (response.ok) {
@@ -162,6 +183,15 @@ export default function YoutubeLinksSection() {
                     </h3>
                     <ExternalLink className="w-4 h-4 flex-shrink-0" />
                   </a>
+                  <label className="inline-flex items-center gap-2 mt-2 cursor-pointer text-sm text-gray-600 dark:text-gray-400">
+                    <input
+                      type="checkbox"
+                      checked={link.watched === true}
+                      onChange={() => toggleWatched(link)}
+                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>Watched</span>
+                  </label>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
                   <button

@@ -27,6 +27,7 @@ export async function GET() {
       title: item.title || '',
       link: item.link || '',
       description: item.description || '',
+      listened: item.listened === true,
     }));
 
     return NextResponse.json({ items });
@@ -62,6 +63,7 @@ export async function POST(request: Request) {
       title: data.title || '',
       link: data.link || '',
       description: data.description || '',
+      listened: data.listened === true,
     });
   } catch (error: any) {
     console.error('Podcasts create error:', error);
@@ -79,9 +81,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Id, title, and link are required' }, { status: 400 });
     }
 
+    const listened = body.listened;
+    const updatePayload: Record<string, unknown> = { title, link, description: description || null };
+    if (typeof listened === 'boolean') updatePayload.listened = listened;
+
     const { data, error } = await supabase
       .from('podcasts')
-      .update({ title, link, description: description || null })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single();
@@ -96,6 +102,7 @@ export async function PUT(request: Request) {
       title: data.title || '',
       link: data.link || '',
       description: data.description || '',
+      listened: data.listened === true,
     });
   } catch (error: any) {
     console.error('Podcasts update error:', error);

@@ -10,6 +10,7 @@ interface Podcast {
   title: string;
   link: string;
   description: string;
+  listened?: boolean;
 }
 
 export default function PodcastsSection() {
@@ -48,11 +49,31 @@ export default function PodcastsSection() {
     setIsModalOpen(true);
   };
 
+  const toggleListened = async (podcast: Podcast) => {
+    const next = !(podcast.listened === true);
+    try {
+      const response = await fetch('/api/supabase/podcasts', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: podcast.id,
+          title: podcast.title,
+          link: podcast.link,
+          description: podcast.description ?? '',
+          listened: next,
+        }),
+      });
+      if (response.ok) await fetchPodcasts();
+    } catch (error) {
+      console.error('Error toggling listened:', error);
+    }
+  };
+
   const openEditModal = (podcast: Podcast) => {
     setEditingPodcast(podcast);
     setModalTitle(podcast.title);
     setModalLink(podcast.link);
-    setModalDescription(podcast.description);
+    setModalDescription(podcast.description ?? '');
     setIsModalOpen(true);
   };
 
@@ -80,6 +101,7 @@ export default function PodcastsSection() {
             title,
             link,
             description: modalDescription.trim(),
+            listened: editingPodcast.listened === true,
           }),
         });
         if (response.ok) {
@@ -174,6 +196,15 @@ export default function PodcastsSection() {
                       {podcast.description}
                     </p>
                   )}
+                  <label className="inline-flex items-center gap-2 mt-2 cursor-pointer text-sm text-gray-600 dark:text-gray-400">
+                    <input
+                      type="checkbox"
+                      checked={podcast.listened === true}
+                      onChange={() => toggleListened(podcast)}
+                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>Listened</span>
+                  </label>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
                   <button
