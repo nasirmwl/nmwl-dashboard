@@ -10,6 +10,8 @@ interface DailyFocus {
   id: string;
   content: string;
   date: string | null;
+  reminderAt: string | null;
+  notifiedAt: string | null;
 }
 
 export default function DailyFocusSection() {
@@ -20,6 +22,7 @@ export default function DailyFocusSection() {
   const [editingItem, setEditingItem] = useState<DailyFocus | null>(null);
   const [modalContent, setModalContent] = useState('');
   const [modalDate, setModalDate] = useState<string | null>(null);
+  const [modalReminderAt, setModalReminderAt] = useState<string | null>(null);
 
   const fetchFocusItems = async () => {
     try {
@@ -43,6 +46,7 @@ export default function DailyFocusSection() {
     setEditingItem(null);
     setModalContent('');
     setModalDate(null);
+    setModalReminderAt(null);
     setIsModalOpen(true);
   };
 
@@ -50,6 +54,7 @@ export default function DailyFocusSection() {
     setEditingItem(item);
     setModalContent(item.content);
     setModalDate(item.date);
+    setModalReminderAt(item.reminderAt);
     setIsModalOpen(true);
   };
 
@@ -58,6 +63,7 @@ export default function DailyFocusSection() {
     setEditingItem(null);
     setModalContent('');
     setModalDate(null);
+    setModalReminderAt(null);
   };
 
   const saveFocusItem = async () => {
@@ -70,7 +76,12 @@ export default function DailyFocusSection() {
         const response = await fetch('/api/supabase/daily-focus', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: editingItem.id, content, date: modalDate }),
+          body: JSON.stringify({
+            id: editingItem.id,
+            content,
+            date: modalDate,
+            reminderAt: modalReminderAt,
+          }),
         });
         if (response.ok) {
           await fetchFocusItems();
@@ -81,7 +92,11 @@ export default function DailyFocusSection() {
         const response = await fetch('/api/supabase/daily-focus', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content, date: modalDate }),
+          body: JSON.stringify({
+            content,
+            date: modalDate,
+            reminderAt: modalReminderAt,
+          }),
         });
         if (response.ok) {
           await fetchFocusItems();
@@ -120,21 +135,21 @@ export default function DailyFocusSection() {
     <>
       <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Important Events</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Reminders</h2>
           <button
             onClick={openAddModal}
             className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
-            aria-label="Add Event"
+            aria-label="Add Reminder"
           >
             <Plus className="w-5 h-5 md:w-4 md:h-4" />
-            <span className="hidden md:inline">Add Event</span>
-            <span className="md:hidden">Add Event</span>
+            <span className="hidden md:inline">Add Reminder</span>
+            <span className="md:hidden">Add Reminder</span>
           </button>
         </div>
 
         {focusItems.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-            <p>No events yet. Click "Add Event" to create one.</p>
+            <p>No reminders yet. Click "Add Reminder" to create one.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -151,6 +166,18 @@ export default function DailyFocusSection() {
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       <Calendar className="w-4 h-4" />
                       <span>{format(new Date(item.date), 'MMM d, yyyy')}</span>
+                    </div>
+                  )}
+                  {item.reminderAt && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <span className="font-medium">Remind at:</span>
+                      <span>{format(new Date(item.reminderAt), 'MMM d, yyyy h:mm a')}</span>
+                    </div>
+                  )}
+                  {item.notifiedAt && (
+                    <div className="flex items-center gap-2 text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+                      <span>Notified:</span>
+                      <span>{format(new Date(item.notifiedAt), 'MMM d, yyyy h:mm a')}</span>
                     </div>
                   )}
                 </div>
@@ -177,7 +204,7 @@ export default function DailyFocusSection() {
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
-        title={editingItem ? 'Edit Event' : 'Add Event'}
+        title={editingItem ? 'Edit Reminder' : 'Add Reminder'}
       >
         <div className="space-y-4">
           <textarea
@@ -186,21 +213,34 @@ export default function DailyFocusSection() {
             onChange={(e) => setModalContent(e.target.value)}
             className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 resize-none"
             rows={8}
-            placeholder="Enter your event..."
+            placeholder="Enter your reminder..."
             onKeyDown={(e) => {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                 saveFocusItem();
               }
             }}
           />
-          <div className="flex items-center gap-3">
-            <Calendar className="w-5 h-5 text-gray-400" />
-            <input
-              type="date"
-              value={modalDate || ''}
-              onChange={(e) => setModalDate(e.target.value || null)}
-              className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100"
-            />
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-5 h-5 text-gray-400" />
+              <input
+                type="date"
+                value={modalDate || ''}
+                onChange={(e) => setModalDate(e.target.value || null)}
+                className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500 dark:text-gray-400 min-w-[90px]">
+                Remind at
+              </span>
+              <input
+                type="datetime-local"
+                value={modalReminderAt || ''}
+                onChange={(e) => setModalReminderAt(e.target.value || null)}
+                className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100"
+              />
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row justify-end gap-3">
             <button

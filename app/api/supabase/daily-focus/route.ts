@@ -28,6 +28,8 @@ export async function GET() {
       id: item.id.toString(),
       content: item.description || item.name || '',
       date: item.date || null,
+      reminderAt: item.reminder_at || null,
+      notifiedAt: item.notified_at || null,
     }));
 
     return NextResponse.json({ items });
@@ -41,7 +43,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { content, date } = body;
+    const { content, date, reminderAt } = body;
 
     if (!content) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 });
@@ -53,6 +55,9 @@ export async function POST(request: Request) {
     };
     if (date) {
       insertData.date = date;
+    }
+    if (reminderAt) {
+      insertData.reminder_at = reminderAt;
     }
 
     const { data, error } = await supabase
@@ -70,6 +75,8 @@ export async function POST(request: Request) {
       id: data.id.toString(),
       content: data.description || data.name || '',
       date: data.date || null,
+      reminderAt: data.reminder_at || null,
+      notifiedAt: data.notified_at || null,
     });
   } catch (error: any) {
     console.error('Daily focus create error:', error);
@@ -81,7 +88,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, content, date } = body;
+    const { id, content, date, reminderAt } = body;
 
     if (!id || content === undefined) {
       return NextResponse.json({ error: 'Id and content are required' }, { status: 400 });
@@ -93,6 +100,9 @@ export async function PUT(request: Request) {
     };
     if (date !== undefined) {
       updateData.date = date;
+    }
+    if (reminderAt !== undefined) {
+      updateData.reminder_at = reminderAt;
     }
 
     const { data, error } = await supabase
@@ -111,6 +121,8 @@ export async function PUT(request: Request) {
       id: data.id.toString(),
       content: data.description || data.name || '',
       date: data.date || null,
+      reminderAt: data.reminder_at || null,
+      notifiedAt: data.notified_at || null,
     });
   } catch (error: any) {
     console.error('Daily focus update error:', error);
