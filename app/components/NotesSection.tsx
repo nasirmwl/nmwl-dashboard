@@ -17,6 +17,7 @@ export default function NotesSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [modalContent, setModalContent] = useState('');
+  const [rawCapture, setRawCapture] = useState('');
 
   const fetchNotes = async () => {
     try {
@@ -110,6 +111,24 @@ export default function NotesSection() {
     );
   }
 
+  const saveRawNote = async () => {
+    const content = rawCapture.trim();
+    if (!content) return;
+    try {
+      const response = await fetch('/api/supabase/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      if (response.ok) {
+        setRawCapture('');
+        await fetchNotes();
+      }
+    } catch (e) {
+      console.error('Error saving raw note:', e);
+    }
+  };
+
   return (
     <>
       <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
@@ -123,6 +142,29 @@ export default function NotesSection() {
             <Plus className="w-5 h-5 md:w-4 md:h-4" />
             <span className="hidden md:inline">Add Note</span>
             <span className="md:hidden">Add Note</span>
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Raw capture
+          </label>
+          <textarea
+            value={rawCapture}
+            onChange={(e) => setRawCapture(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveRawNote();
+            }}
+            placeholder="Paste or type raw notes… (Cmd/Ctrl+Enter to save)"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 resize-none text-sm"
+            rows={3}
+          />
+          <button
+            onClick={saveRawNote}
+            disabled={!rawCapture.trim()}
+            className="mt-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:pointer-events-none text-gray-800 dark:text-gray-200 rounded-lg text-sm"
+          >
+            Save raw note
           </button>
         </div>
 

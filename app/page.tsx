@@ -19,20 +19,17 @@ export default function Home() {
       <div className="min-h-screen bg-white dark:bg-gray-900">
         <main className="container mx-auto px-4 sm:px-4 py-6 sm:py-8 max-w-7xl">
           <div className="space-y-6 sm:space-y-8">
-            {/* Notes and Promises Side by Side on Desktop */}
+            {/* Weather at top */}
             <section>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <PromisesSection />
-                <NotesSection />
-              </div>
+              <WeatherSection />
             </section>
 
-            {/* Daily Focus Section (Imp Events) */}
+            {/* Notes – raw capture */}
             <section>
-              <DailyFocusSection />
+              <NotesSection />
             </section>
 
-            {/* Podcasts and YouTube Links Side by Side on Desktop */}
+            {/* Podcasts and YouTube Links */}
             <section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <PodcastsSection />
@@ -40,17 +37,20 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Spending Section */}
+            {/* Commitments and Important Events side by side */}
+            <section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <PromisesSection />
+                <DailyFocusSection />
+              </div>
+            </section>
+
+            {/* Spending */}
             <section>
               <SpendingSection />
             </section>
 
-            {/* Weather Section */}
-            <section>
-              <WeatherSection />
-            </section>
-
-            {/* Jira Tasks Section - Bottom */}
+            {/* Jira Tasks */}
             <section>
               <JiraTasksSection />
             </section>
