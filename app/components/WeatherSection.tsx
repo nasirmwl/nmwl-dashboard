@@ -151,22 +151,33 @@ function WeatherPlaceCard({ data }: { data: LocationWeather }) {
             </span>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          {data.saturday.min != null && (
-            <div className="text-xs p-2 bg-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600">
-              <div className="font-medium text-gray-700 dark:text-gray-300">Sat</div>
-              <div className="font-semibold">{data.saturday.min}° – {data.saturday.max}°</div>
-              <div className="text-gray-500 dark:text-gray-400 capitalize truncate">{data.saturday.description}</div>
+        {(data.saturday?.min != null || data.sunday?.min != null) && (
+          <>
+            <div className="text-xs font-medium text-gray-600 dark:text-gray-400 pt-1">Weekend</div>
+            <div className="grid grid-cols-2 gap-2">
+              {data.saturday?.min != null && (
+                <div className="text-xs p-2 bg-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600">
+                  <div className="font-medium text-gray-700 dark:text-gray-300">Sat</div>
+                  <div className="font-semibold">{data.saturday.min}° – {data.saturday.max}°</div>
+                  <div className="text-gray-500 dark:text-gray-400 capitalize truncate">{data.saturday.description}</div>
+                  {data.saturday.rainProbability > 0 && (
+                    <div className="text-gray-500 dark:text-gray-400">🌧️ {data.saturday.rainProbability}%</div>
+                  )}
+                </div>
+              )}
+              {data.sunday?.min != null && (
+                <div className="text-xs p-2 bg-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600">
+                  <div className="font-medium text-gray-700 dark:text-gray-300">Sun</div>
+                  <div className="font-semibold">{data.sunday.min}° – {data.sunday.max}°</div>
+                  <div className="text-gray-500 dark:text-gray-400 capitalize truncate">{data.sunday.description}</div>
+                  {data.sunday.rainProbability > 0 && (
+                    <div className="text-gray-500 dark:text-gray-400">🌧️ {data.sunday.rainProbability}%</div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
-          {data.sunday.min != null && (
-            <div className="text-xs p-2 bg-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600">
-              <div className="font-medium text-gray-700 dark:text-gray-300">Sun</div>
-              <div className="font-semibold">{data.sunday.min}° – {data.sunday.max}°</div>
-              <div className="text-gray-500 dark:text-gray-400 capitalize truncate">{data.sunday.description}</div>
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { Edit2, Plus, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import Modal from './Modal';
 
@@ -18,6 +18,9 @@ export default function NotesSection() {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [modalContent, setModalContent] = useState('');
   const [rawCapture, setRawCapture] = useState('');
+  const rawInputRef = useRef<HTMLTextAreaElement>(null);
+  const rawCaptureRef = useRef(rawCapture);
+  rawCaptureRef.current = rawCapture;
 
   const fetchNotes = async () => {
     try {
@@ -36,6 +39,45 @@ export default function NotesSection() {
     setIsClient(true);
     fetchNotes();
   }, []);
+
+  const saveRawNote = useCallback(async () => {
+    const fromInput = rawInputRef.current?.value?.trim() ?? '';
+    const content = fromInput || rawCaptureRef.current.trim();
+    if (!content) return;
+    try {
+      const response = await fetch('/api/supabase/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      if (response.ok) {
+        setRawCapture('');
+        if (rawInputRef.current) rawInputRef.current.value = '';
+        await fetchNotes();
+      }
+    } catch (e) {
+      console.error('Error saving raw note:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.metaKey || e.ctrlKey;
+      if (isMod && e.key === 'Enter') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          rawInputRef.current?.focus();
+        } else {
+          e.preventDefault();
+          e.stopPropagation();
+          saveRawNote();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [saveRawNote]);
 
   const openAddModal = () => {
     setEditingNote(null);
@@ -111,24 +153,6 @@ export default function NotesSection() {
     );
   }
 
-  const saveRawNote = async () => {
-    const content = rawCapture.trim();
-    if (!content) return;
-    try {
-      const response = await fetch('/api/supabase/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
-      });
-      if (response.ok) {
-        setRawCapture('');
-        await fetchNotes();
-      }
-    } catch (e) {
-      console.error('Error saving raw note:', e);
-    }
-  };
-
   return (
     <>
       <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
@@ -150,12 +174,17 @@ export default function NotesSection() {
             Raw capture
           </label>
           <textarea
+            ref={rawInputRef}
             value={rawCapture}
             onChange={(e) => setRawCapture(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveRawNote();
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                saveRawNote();
+              }
             }}
-            placeholder="Paste or type raw notes… (Cmd/Ctrl+Enter to save)"
+            placeholder="Paste or type raw notes… (Cmd+Enter save, Cmd+Shift+Enter focus)"
             className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 resize-none text-sm"
             rows={3}
           />
