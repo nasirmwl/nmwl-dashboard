@@ -70,6 +70,8 @@ export default function DailyFocusSection() {
     const content = modalContent.trim();
     if (!content) return;
 
+    const reminderAtIso = modalReminderAt ? new Date(modalReminderAt).toISOString() : null;
+
     try {
       if (editingItem) {
         // Update existing item
@@ -80,7 +82,7 @@ export default function DailyFocusSection() {
             id: editingItem.id,
             content,
             date: modalDate,
-            reminderAt: modalReminderAt,
+            reminderAt: reminderAtIso,
           }),
         });
         if (response.ok) {
@@ -95,7 +97,7 @@ export default function DailyFocusSection() {
           body: JSON.stringify({
             content,
             date: modalDate,
-            reminderAt: modalReminderAt,
+            reminderAt: reminderAtIso,
           }),
         });
         if (response.ok) {
