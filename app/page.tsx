@@ -3,10 +3,8 @@
 import DailyFocusSection from './components/DailyFocusSection';
 import NotesSection from './components/NotesSection';
 import PodcastsSection from './components/PodcastsSection';
-import PromisesSection from './components/PromisesSection';
 import ProtectedPage from './components/ProtectedPage';
 import WeatherSection from './components/WeatherSection';
-import YoutubeLinksSection from './components/YoutubeLinksSection';
 import { useGlobalToggleShortcut } from './hooks/useSectionToggle';
 
 export default function Home() {
@@ -27,20 +25,12 @@ export default function Home() {
               <NotesSection />
             </section>
 
-            {/* Podcasts and YouTube Links */}
             <section>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <PodcastsSection />
-                <YoutubeLinksSection />
-              </div>
+              <PodcastsSection />
             </section>
 
-            {/* Commitments and Important Events side by side */}
             <section>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <PromisesSection />
-                <DailyFocusSection />
-              </div>
+              <DailyFocusSection />
             </section>
           </div>
         </main>
