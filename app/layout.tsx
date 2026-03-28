@@ -29,8 +29,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} relative font-mono antialiased`}
       >
-        <ParticleBackground />
-        <div className="relative z-10">{children}</div>
+        <div className="relative z-10 min-h-screen">
+          <ParticleBackground />
+          {children}
+        </div>
       </body>
     </html>
   );

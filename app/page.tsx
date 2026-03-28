@@ -13,7 +13,7 @@ export default function Home() {
 
   return (
     <ProtectedPage>
-      <div className="crt-screen min-h-screen bg-crt-bg">
+      <div className="crt-screen min-h-screen">
         <main className="mx-auto w-full max-w-[700px] px-4 sm:px-4 py-6 sm:py-8">
           <div className="space-y-6 sm:space-y-8">
             <section>

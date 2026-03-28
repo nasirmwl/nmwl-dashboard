@@ -23,11 +23,11 @@ const cyberOptions = {
     },
     links: {
       blink: true,
-      color: { value: "#2d6b45" },
+      color: { value: "#3d8f5c" },
       consent: false,
       distance: 110,
       enable: true,
-      opacity: 0.28,
+      opacity: 0.42,
       shadow: {
         blur: 4,
         color: { value: "#5ee397" },
@@ -46,11 +46,11 @@ const cyberOptions = {
       straight: false,
     },
     number: {
-      density: { enable: true, width: 900, height: 900 },
-      value: 52,
+      density: { enable: true, width: 800, height: 800 },
+      value: 72,
     },
     opacity: {
-      value: { min: 0.2, max: 0.65 },
+      value: { min: 0.35, max: 0.85 },
       animation: {
         enable: true,
         speed: 0.35,
@@ -111,10 +111,13 @@ export default function ParticleBackground() {
   if (!ready) return null;
 
   return (
-    <div className="crt-particles pointer-events-none fixed inset-0 z-0" aria-hidden>
+    <div
+      className="crt-particles pointer-events-none fixed inset-0 z-0 min-h-screen w-full"
+      aria-hidden
+    >
       <Particles
         id="crt-tsparticles"
-        className="h-full w-full"
+        className="h-full min-h-screen w-full"
         options={options}
       />
     </div>

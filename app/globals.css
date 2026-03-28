@@ -74,13 +74,15 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  /* Slightly lighter overlay so tsparticles remain visible between panels */
+  opacity: 0.92;
   background:
     radial-gradient(ellipse 120% 80% at 50% 0%, rgba(94, 227, 151, 0.06), transparent 55%),
     repeating-linear-gradient(
       transparent 0,
       transparent 2px,
-      rgba(0, 0, 0, 0.13) 2px,
-      rgba(0, 0, 0, 0.13) 4px
+      rgba(0, 0, 0, 0.1) 2px,
+      rgba(0, 0, 0, 0.1) 4px
     );
 }
 
@@ -89,14 +91,14 @@ body {
   z-index: 1;
 }
 
-/* tsparticles — cyberpunk grid behind UI (subtle, not overpowering) */
+/* tsparticles — cyberpunk grid behind panels (visible in gutters & between sections) */
 .crt-particles canvas {
-  opacity: 0.55;
+  opacity: 0.9;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .crt-particles canvas {
-    opacity: 0.35;
+    opacity: 0.55;
   }
 }
 
