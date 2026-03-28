@@ -139,9 +139,6 @@ export default function NotesSection() {
     <>
       <SectionBox title="Notes">
         <div className="mb-4">
-          <label className="block text-sm font-medium text-crt-muted mb-1 crt-text-plain uppercase tracking-wider text-xs">
-            Raw capture
-          </label>
           <textarea
             ref={rawInputRef}
             value={rawCapture}
@@ -189,8 +186,8 @@ export default function NotesSection() {
           (notes.length === 0 ? (
             <div className="text-center py-12 text-crt-muted crt-text-plain">
               <p>
-                No notes yet. Type in raw capture and use Cmd+Enter
-                (Ctrl+Enter) to save.
+                No notes yet. Type in raw capture and use Cmd+Enter (Ctrl+Enter)
+                to save.
               </p>
             </div>
           ) : (
