@@ -66,32 +66,71 @@ const formatHour = (hour: number): string => {
   return `${hour - 12}pm`;
 };
 
+function CollapsibleHourlyList({ hourly }: { hourly: HourlyWeather[] }) {
+  const [open, setOpen] = useState(false);
+  if (hourly.length === 0) return null;
+  return (
+    <div className="mb-2">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full text-left text-xs font-medium text-crt-phosphor hover:bg-crt-bar-track rounded-sm p-2 -mx-1 transition-colors crt-text-plain"
+      >
+        Hourly
+        <svg
+          className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="mt-1 space-y-1 max-h-40 overflow-y-auto">
+          {hourly.map((hour, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between text-xs p-1.5 bg-crt-bg/80 rounded-sm border border-crt-border"
+            >
+              <span className="font-medium w-9 text-crt-muted">{formatHour(hour.hour)}</span>
+              <span className="font-semibold text-crt-phosphor-bright">{hour.temp}°</span>
+              <span className="text-crt-muted capitalize truncate max-w-[80px] crt-text-plain">
+                {hour.description}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function WeatherPlaceCard({ data }: { data: LocationWeather }) {
-  const [todayHourlyOpen, setTodayHourlyOpen] = useState(false);
   const today = new Date();
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const maxRainProbability = getMaxRainProbability(data.today.hourly);
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
-      <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">{data.name}</h3>
+    <div className="rounded-sm border border-crt-border bg-crt-bar-track/60 p-4 crt-text-plain">
+      <h3 className="text-sm font-semibold text-crt-phosphor-bright mb-3 tracking-wide">{data.name}</h3>
 
-      <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between mb-3 pb-3 border-b border-crt-border">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Today</span>
-            <span className="text-xs text-gray-500 dark:text-gray-500">{format(today, 'MMM d')}</span>
+            <span className="text-xs font-medium text-crt-muted">Today</span>
+            <span className="text-xs text-crt-phosphor-dim">{format(today, 'MMM d')}</span>
             {data.today.current && (
               <>
-                <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                <span className="text-xl font-bold text-crt-phosphor-bright">
                   {data.today.current.temp}°
                 </span>
-                <span className="text-xs text-gray-600 dark:text-gray-400 capitalize">
+                <span className="text-xs text-crt-muted capitalize">
                   {data.today.current.description}
                 </span>
                 {maxRainProbability > 0 && (
-                  <span className="text-xs text-gray-600 dark:text-gray-400">🌧️ {maxRainProbability}%</span>
+                  <span className="text-xs text-crt-muted">🌧️ {maxRainProbability}%</span>
                 )}
               </>
             )}
@@ -107,71 +146,39 @@ function WeatherPlaceCard({ data }: { data: LocationWeather }) {
         )}
       </div>
 
-      {data.today.hourly.length > 0 && (
-        <div className="mb-2">
-          <button
-            onClick={() => setTodayHourlyOpen(!todayHourlyOpen)}
-            className="flex items-center justify-between w-full text-left text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 -mx-1 transition-colors"
-          >
-            Hourly
-            <svg
-              className={`w-3 h-3 transition-transform ${todayHourlyOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {todayHourlyOpen && (
-            <div className="mt-1 space-y-1 max-h-40 overflow-y-auto">
-              {data.today.hourly.map((hour, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between text-xs p-1.5 bg-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600"
-                >
-                  <span className="font-medium w-9">{formatHour(hour.hour)}</span>
-                  <span className="font-semibold">{hour.temp}°</span>
-                  <span className="text-gray-500 dark:text-gray-400 capitalize truncate max-w-[80px]">
-                    {hour.description}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <CollapsibleHourlyList hourly={data.today.hourly} />
 
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-2 space-y-2">
+      <div className="border-t border-crt-border pt-2 space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-gray-600 dark:text-gray-400">Tomorrow {format(tomorrow, 'MMM d')}</span>
+          <span className="text-crt-muted crt-text-plain">Tomorrow {format(tomorrow, 'MMM d')}</span>
           {data.tomorrow.hourly.length > 0 && (
-            <span className="font-semibold">
+            <span className="font-semibold text-crt-phosphor-bright">
               {data.tomorrow.hourly[0]?.temp}° – {Math.max(...data.tomorrow.hourly.map(h => h.temp))}°
             </span>
           )}
         </div>
+        <CollapsibleHourlyList hourly={data.tomorrow.hourly} />
         {(data.saturday?.min != null || data.sunday?.min != null) && (
           <>
-            <div className="text-xs font-medium text-gray-600 dark:text-gray-400 pt-1">Weekend</div>
+            <div className="text-xs font-medium text-crt-muted pt-1 crt-text-plain">Weekend</div>
             <div className="grid grid-cols-2 gap-2">
               {data.saturday?.min != null && (
-                <div className="text-xs p-2 bg-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600">
-                  <div className="font-medium text-gray-700 dark:text-gray-300">Sat</div>
-                  <div className="font-semibold">{data.saturday.min}° – {data.saturday.max}°</div>
-                  <div className="text-gray-500 dark:text-gray-400 capitalize truncate">{data.saturday.description}</div>
+                <div className="text-xs p-2 bg-crt-bg/80 rounded-sm border border-crt-border crt-text-plain">
+                  <div className="font-medium text-crt-phosphor">Sat</div>
+                  <div className="font-semibold text-crt-phosphor-bright">{data.saturday.min}° – {data.saturday.max}°</div>
+                  <div className="text-crt-muted capitalize truncate">{data.saturday.description}</div>
                   {data.saturday.rainProbability > 0 && (
-                    <div className="text-gray-500 dark:text-gray-400">🌧️ {data.saturday.rainProbability}%</div>
+                    <div className="text-crt-muted">🌧️ {data.saturday.rainProbability}%</div>
                   )}
                 </div>
               )}
               {data.sunday?.min != null && (
-                <div className="text-xs p-2 bg-white dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600">
-                  <div className="font-medium text-gray-700 dark:text-gray-300">Sun</div>
-                  <div className="font-semibold">{data.sunday.min}° – {data.sunday.max}°</div>
-                  <div className="text-gray-500 dark:text-gray-400 capitalize truncate">{data.sunday.description}</div>
+                <div className="text-xs p-2 bg-crt-bg/80 rounded-sm border border-crt-border crt-text-plain">
+                  <div className="font-medium text-crt-phosphor">Sun</div>
+                  <div className="font-semibold text-crt-phosphor-bright">{data.sunday.min}° – {data.sunday.max}°</div>
+                  <div className="text-crt-muted capitalize truncate">{data.sunday.description}</div>
                   {data.sunday.rainProbability > 0 && (
-                    <div className="text-gray-500 dark:text-gray-400">🌧️ {data.sunday.rainProbability}%</div>
+                    <div className="text-crt-muted">🌧️ {data.sunday.rainProbability}%</div>
                   )}
                 </div>
               )}
@@ -198,11 +205,18 @@ export default function WeatherSection() {
         throw new Error(err.error || `Failed to fetch weather (${response.status})`);
       }
       const data = await response.json();
+      const ensureHourlyTime = (h: any) => ({ ...h, time: h.time || new Date().toISOString() });
       if (data.baku?.today?.hourly) {
-        data.baku.today.hourly = data.baku.today.hourly.map((h: any) => ({ ...h, time: h.time || new Date().toISOString() }));
+        data.baku.today.hourly = data.baku.today.hourly.map(ensureHourlyTime);
+      }
+      if (data.baku?.tomorrow?.hourly) {
+        data.baku.tomorrow.hourly = data.baku.tomorrow.hourly.map(ensureHourlyTime);
       }
       if (data.lahij?.today?.hourly) {
-        data.lahij.today.hourly = data.lahij.today.hourly.map((h: any) => ({ ...h, time: h.time || new Date().toISOString() }));
+        data.lahij.today.hourly = data.lahij.today.hourly.map(ensureHourlyTime);
+      }
+      if (data.lahij?.tomorrow?.hourly) {
+        data.lahij.tomorrow.hourly = data.lahij.tomorrow.hourly.map(ensureHourlyTime);
       }
       setWeather(data);
     } catch (err: any) {
@@ -220,19 +234,19 @@ export default function WeatherSection() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800 animate-pulse h-48" />
+      <div className="crt-panel rounded-sm p-4 sm:p-6 animate-pulse h-48 border-crt-border" />
     );
   }
 
   if (error || !weather) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+      <div className="crt-panel rounded-sm p-4 sm:p-6">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-red-600 dark:text-red-400 font-medium text-sm">{error || 'Failed to load weather'}</p>
+          <p className="text-crt-danger font-medium text-sm crt-text-plain">{error || 'Failed to load weather'}</p>
           <button
             onClick={fetchWeather}
             disabled={loading}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm disabled:opacity-50"
+            className="px-4 py-2 crt-btn crt-btn-danger rounded-sm text-sm disabled:opacity-50"
           >
             Retry
           </button>
@@ -242,8 +256,8 @@ export default function WeatherSection() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Weather</h2>
+    <div className="crt-panel rounded-sm p-4 sm:p-6">
+      <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright mb-4 tracking-wide">Weather</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <WeatherPlaceCard data={weather.baku} />
         <WeatherPlaceCard data={weather.lahij} />

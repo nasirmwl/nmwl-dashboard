@@ -12,7 +12,7 @@ export default function Home() {
 
   return (
     <ProtectedPage>
-      <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div className="crt-screen min-h-screen bg-crt-bg">
         <main className="container mx-auto px-4 sm:px-4 py-6 sm:py-8 max-w-7xl">
           <div className="space-y-6 sm:space-y-8">
             {/* Weather at top */}

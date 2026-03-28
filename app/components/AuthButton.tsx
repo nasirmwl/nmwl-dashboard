@@ -45,19 +45,19 @@ export default function AuthButton() {
 
   if (loading) {
     return (
-      <div className="h-11 sm:h-10 w-20 sm:w-24 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse" />
+      <div className="h-11 sm:h-10 w-20 sm:w-24 bg-crt-bar-track border border-crt-border rounded-sm animate-pulse" />
     )
   }
 
   if (user) {
     return (
       <div className="flex items-center gap-2 sm:gap-3">
-        <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold text-xs sm:text-base shrink-0">
+        <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full border border-crt-phosphor-dim bg-crt-bar-track flex items-center justify-center text-crt-phosphor-bright font-semibold text-xs sm:text-base shrink-0 crt-text-plain">
           {user.email?.charAt(0).toUpperCase() || 'U'}
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-3 md:px-4 md:py-2 text-xs sm:text-base md:text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+          className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-3 md:px-4 md:py-2 text-xs sm:text-base md:text-sm font-medium crt-btn crt-btn-danger rounded-sm transition-colors"
           aria-label="Logout"
         >
           <LogOut className="w-4 h-4 sm:w-5 sm:h-5 md:w-4 md:h-4" />
@@ -70,7 +70,7 @@ export default function AuthButton() {
   return (
     <button
       onClick={handleLogin}
-      className="flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 md:px-4 md:py-2 text-sm sm:text-base md:text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors min-h-[44px] sm:min-h-0"
+      className="flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 md:px-4 md:py-2 text-sm sm:text-base md:text-sm font-medium crt-btn crt-btn-primary rounded-sm transition-colors min-h-[44px] sm:min-h-0"
       aria-label="Login with GitHub"
     >
       <LogIn className="w-5 h-5 md:w-4 md:h-4" />

@@ -147,20 +147,20 @@ export default function NotesSection() {
 
   if (!isClient || loading) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
-        <div className="animate-pulse h-32" />
+      <div className="crt-panel rounded-sm p-4 sm:p-6">
+        <div className="animate-pulse h-32 bg-crt-bar-track/40 rounded-sm" />
       </div>
     );
   }
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+      <div className="crt-panel rounded-sm p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Notes</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright tracking-wide">Notes</h2>
           <button
             onClick={openAddModal}
-            className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             aria-label="Add Note"
           >
             <Plus className="w-5 h-5 md:w-4 md:h-4" />
@@ -170,7 +170,7 @@ export default function NotesSection() {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-crt-muted mb-1 crt-text-plain uppercase tracking-wider text-xs">
             Raw capture
           </label>
           <textarea
@@ -185,20 +185,20 @@ export default function NotesSection() {
               }
             }}
             placeholder="Paste or type raw notes… (Cmd+Enter save, Cmd+Shift+Enter focus)"
-            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 resize-none text-sm"
+            className="w-full px-4 py-3 crt-input rounded-sm resize-none text-sm"
             rows={3}
           />
           <button
             onClick={saveRawNote}
             disabled={!rawCapture.trim()}
-            className="mt-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:pointer-events-none text-gray-800 dark:text-gray-200 rounded-lg text-sm"
+            className="mt-2 px-4 py-2 crt-btn rounded-sm disabled:opacity-50 disabled:pointer-events-none text-sm"
           >
             Save raw note
           </button>
         </div>
 
         {notes.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-crt-muted crt-text-plain">
             <p>No notes yet. Click "Add Note" to create one.</p>
           </div>
         ) : (
@@ -206,21 +206,21 @@ export default function NotesSection() {
             {notes.map((note) => (
               <div
                 key={note.id}
-                className="group flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+                className="group flex items-start gap-3 p-4 bg-crt-bar-track/40 rounded-sm border border-crt-border hover:border-crt-phosphor-dim transition-colors crt-text-plain"
               >
-                <p className="flex-1 text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                <p className="flex-1 text-crt-phosphor-bright whitespace-pre-wrap">
                   {note.content}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => openEditModal(note)}
-                    className="p-3.5 md:p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+                    className="p-3.5 md:p-2 text-crt-phosphor hover:bg-crt-bar-track rounded-sm transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center crt-text-plain"
                   >
                     <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
                   </button>
                   <button
                     onClick={() => deleteNote(note.id)}
-                    className="p-3.5 md:p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+                    className="p-3.5 md:p-2 text-crt-danger hover:bg-crt-bar-track rounded-sm transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center crt-text-plain"
                   >
                     <X className="w-5 h-5 md:w-4 md:h-4" />
                   </button>
@@ -241,7 +241,7 @@ export default function NotesSection() {
             autoFocus
             value={modalContent}
             onChange={(e) => setModalContent(e.target.value)}
-            className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 resize-none"
+            className="w-full px-4 py-3 crt-input rounded-sm resize-none"
             rows={8}
             placeholder="Enter your note..."
             onKeyDown={(e) => {
@@ -253,13 +253,13 @@ export default function NotesSection() {
           <div className="flex flex-col sm:flex-row justify-end gap-3">
             <button
               onClick={closeModal}
-              className="px-5 py-3.5 md:px-4 md:py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+              className="px-5 py-3.5 md:px-4 md:py-2 crt-btn rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               onClick={saveNote}
-              className="px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+              className="px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
               {editingNote ? 'Update' : 'Create'}
             </button>

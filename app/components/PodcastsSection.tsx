@@ -146,20 +146,20 @@ export default function PodcastsSection() {
 
   if (!isClient || loading) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
-        <div className="animate-pulse h-32" />
+      <div className="crt-panel rounded-sm p-4 sm:p-6">
+        <div className="animate-pulse h-32 bg-crt-bar-track/40 rounded-sm" />
       </div>
     );
   }
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+      <div className="crt-panel rounded-sm p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Podcasts</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright tracking-wide">Podcasts</h2>
           <button
             onClick={openAddModal}
-            className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             aria-label="Add Podcast"
           >
             <Plus className="w-5 h-5 md:w-4 md:h-4" />
@@ -169,7 +169,7 @@ export default function PodcastsSection() {
         </div>
 
         {podcasts.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-crt-muted crt-text-plain">
             <p>No podcasts yet. Click "Add Podcast" to create one.</p>
           </div>
         ) : (
@@ -177,31 +177,31 @@ export default function PodcastsSection() {
             {podcasts.map((podcast) => (
               <div
                 key={podcast.id}
-                className="group flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+                className="group flex items-start gap-3 p-4 bg-crt-bar-track/40 rounded-sm border border-crt-border hover:border-crt-phosphor-dim transition-colors crt-text-plain"
               >
                 <div className="flex-1 min-w-0">
                   <a
                     href={podcast.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline mb-1"
+                    className="flex items-center gap-2 text-crt-phosphor hover:text-crt-phosphor-bright hover:underline mb-1"
                   >
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                    <h3 className="font-semibold text-crt-phosphor-bright truncate">
                       {podcast.title}
                     </h3>
                     <ExternalLink className="w-4 h-4 flex-shrink-0" />
                   </a>
                   {podcast.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">
+                    <p className="text-sm text-crt-muted mt-1 whitespace-pre-wrap">
                       {podcast.description}
                     </p>
                   )}
-                  <label className="inline-flex items-center gap-2 mt-2 cursor-pointer text-sm text-gray-600 dark:text-gray-400">
+                  <label className="inline-flex items-center gap-2 mt-2 cursor-pointer text-sm text-crt-muted">
                     <input
                       type="checkbox"
                       checked={podcast.listened === true}
                       onChange={() => toggleListened(podcast)}
-                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-crt-border accent-[var(--crt-phosphor)]"
                     />
                     <span>Listened</span>
                   </label>
@@ -209,13 +209,13 @@ export default function PodcastsSection() {
                 <div className="flex gap-2 flex-shrink-0">
                   <button
                     onClick={() => openEditModal(podcast)}
-                    className="p-3.5 md:p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+                    className="p-3.5 md:p-2 text-crt-phosphor hover:bg-crt-bar-track rounded-sm transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center crt-text-plain"
                   >
                     <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
                   </button>
                   <button
                     onClick={() => deletePodcast(podcast.id)}
-                    className="p-3.5 md:p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+                    className="p-3.5 md:p-2 text-crt-danger hover:bg-crt-bar-track rounded-sm transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center crt-text-plain"
                   >
                     <X className="w-5 h-5 md:w-4 md:h-4" />
                   </button>
@@ -233,7 +233,7 @@ export default function PodcastsSection() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-crt-muted mb-1 crt-text-plain uppercase tracking-wider text-xs">
               Title *
             </label>
             <input
@@ -241,30 +241,30 @@ export default function PodcastsSection() {
               type="text"
               value={modalTitle}
               onChange={(e) => setModalTitle(e.target.value)}
-              className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100"
+              className="w-full px-4 py-2 crt-input rounded-sm"
               placeholder="Enter podcast title..."
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-crt-muted mb-1 crt-text-plain uppercase tracking-wider text-xs">
               Link *
             </label>
             <input
               type="url"
               value={modalLink}
               onChange={(e) => setModalLink(e.target.value)}
-              className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100"
+              className="w-full px-4 py-2 crt-input rounded-sm"
               placeholder="https://..."
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-crt-muted mb-1 crt-text-plain uppercase tracking-wider text-xs">
               Description
             </label>
             <textarea
               value={modalDescription}
               onChange={(e) => setModalDescription(e.target.value)}
-              className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 resize-none"
+              className="w-full px-4 py-3 crt-input rounded-sm resize-none"
               rows={4}
               placeholder="Enter description (optional)..."
               onKeyDown={(e) => {
@@ -277,13 +277,13 @@ export default function PodcastsSection() {
           <div className="flex flex-col sm:flex-row justify-end gap-3">
             <button
               onClick={closeModal}
-              className="px-5 py-3.5 md:px-4 md:py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+              className="px-5 py-3.5 md:px-4 md:py-2 crt-btn rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               onClick={savePodcast}
-              className="px-5 py-3.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
+              className="px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
               {editingPodcast ? 'Update' : 'Create'}
             </button>

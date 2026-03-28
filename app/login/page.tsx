@@ -33,27 +33,27 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="crt-screen min-h-screen flex items-center justify-center bg-crt-bg">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-crt-border border-t-crt-phosphor-bright" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 px-4">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+    <div className="crt-screen min-h-screen flex items-center justify-center bg-crt-bg px-4">
+      <div className="max-w-md w-full space-y-8 p-8 crt-panel rounded-sm">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-crt-phosphor-bright tracking-wide crt-text-plain">
             Welcome to Personal Dashboard
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-center text-sm text-crt-muted crt-text-plain">
             Sign in to access your dashboard
           </p>
         </div>
         <div className="mt-8">
           <button
             onClick={handleLogin}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 md:px-4 md:py-3 border border-transparent rounded-md shadow-sm text-base md:text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 md:px-4 md:py-3 crt-btn crt-btn-primary rounded-sm text-base md:text-sm font-medium transition-colors"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path
