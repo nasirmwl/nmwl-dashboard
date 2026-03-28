@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Edit2, ExternalLink, Plus, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Edit2, ExternalLink, Plus, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
-import Modal from './Modal';
+import Modal from "./Modal";
 
 interface Podcast {
   id: string;
@@ -19,18 +19,18 @@ export default function PodcastsSection() {
   const [isClient, setIsClient] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPodcast, setEditingPodcast] = useState<Podcast | null>(null);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalLink, setModalLink] = useState('');
-  const [modalDescription, setModalDescription] = useState('');
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalLink, setModalLink] = useState("");
+  const [modalDescription, setModalDescription] = useState("");
 
   const fetchPodcasts = async () => {
     try {
-      const response = await fetch('/api/supabase/podcasts');
-      if (!response.ok) throw new Error('Failed to fetch podcasts');
+      const response = await fetch("/api/supabase/podcasts");
+      if (!response.ok) throw new Error("Failed to fetch podcasts");
       const data = await response.json();
       setPodcasts(data.items);
     } catch (error) {
-      console.error('Error fetching podcasts:', error);
+      console.error("Error fetching podcasts:", error);
     } finally {
       setLoading(false);
     }
@@ -43,29 +43,29 @@ export default function PodcastsSection() {
 
   const openAddModal = () => {
     setEditingPodcast(null);
-    setModalTitle('');
-    setModalLink('');
-    setModalDescription('');
+    setModalTitle("");
+    setModalLink("");
+    setModalDescription("");
     setIsModalOpen(true);
   };
 
   const toggleListened = async (podcast: Podcast) => {
     const next = !(podcast.listened === true);
     try {
-      const response = await fetch('/api/supabase/podcasts', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/supabase/podcasts", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: podcast.id,
           title: podcast.title,
           link: podcast.link,
-          description: podcast.description ?? '',
+          description: podcast.description ?? "",
           listened: next,
         }),
       });
       if (response.ok) await fetchPodcasts();
     } catch (error) {
-      console.error('Error toggling listened:', error);
+      console.error("Error toggling listened:", error);
     }
   };
 
@@ -73,16 +73,16 @@ export default function PodcastsSection() {
     setEditingPodcast(podcast);
     setModalTitle(podcast.title);
     setModalLink(podcast.link);
-    setModalDescription(podcast.description ?? '');
+    setModalDescription(podcast.description ?? "");
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingPodcast(null);
-    setModalTitle('');
-    setModalLink('');
-    setModalDescription('');
+    setModalTitle("");
+    setModalLink("");
+    setModalDescription("");
   };
 
   const savePodcast = async () => {
@@ -93,9 +93,9 @@ export default function PodcastsSection() {
     try {
       if (editingPodcast) {
         // Update existing podcast
-        const response = await fetch('/api/supabase/podcasts', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/supabase/podcasts", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: editingPodcast.id,
             title,
@@ -110,9 +110,9 @@ export default function PodcastsSection() {
         }
       } else {
         // Create new podcast
-        const response = await fetch('/api/supabase/podcasts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/supabase/podcasts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             title,
             link,
@@ -125,22 +125,22 @@ export default function PodcastsSection() {
         }
       }
     } catch (error) {
-      console.error('Error saving podcast:', error);
+      console.error("Error saving podcast:", error);
     }
   };
 
   const deletePodcast = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this podcast?')) return;
+    if (!confirm("Are you sure you want to delete this podcast?")) return;
 
     try {
       const response = await fetch(`/api/supabase/podcasts?id=${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       if (response.ok) {
         await fetchPodcasts();
       }
     } catch (error) {
-      console.error('Error deleting podcast:', error);
+      console.error("Error deleting podcast:", error);
     }
   };
 
@@ -156,7 +156,9 @@ export default function PodcastsSection() {
     <>
       <div className="crt-panel rounded-sm p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright tracking-wide">Podcasts</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright tracking-wide">
+            Podcasts
+          </h2>
           <button
             onClick={openAddModal}
             className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
@@ -229,7 +231,7 @@ export default function PodcastsSection() {
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
-        title={editingPodcast ? 'Edit Podcast' : 'Add Podcast'}
+        title={editingPodcast ? "Edit Podcast" : "Add Podcast"}
       >
         <div className="space-y-4">
           <div>
@@ -268,7 +270,7 @@ export default function PodcastsSection() {
               rows={4}
               placeholder="Enter description (optional)..."
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   savePodcast();
                 }
               }}
@@ -285,7 +287,7 @@ export default function PodcastsSection() {
               onClick={savePodcast}
               className="px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
-              {editingPodcast ? 'Update' : 'Create'}
+              {editingPodcast ? "Update" : "Create"}
             </button>
           </div>
         </div>
@@ -293,4 +295,3 @@ export default function PodcastsSection() {
     </>
   );
 }
-

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Edit2, Plus, X } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Edit2, Plus, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import Modal from './Modal';
+import Modal from "./Modal";
 
 interface Note {
   id: string;
@@ -16,20 +16,20 @@ export default function NotesSection() {
   const [isClient, setIsClient] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const [modalContent, setModalContent] = useState('');
-  const [rawCapture, setRawCapture] = useState('');
+  const [modalContent, setModalContent] = useState("");
+  const [rawCapture, setRawCapture] = useState("");
   const rawInputRef = useRef<HTMLTextAreaElement>(null);
   const rawCaptureRef = useRef(rawCapture);
   rawCaptureRef.current = rawCapture;
 
   const fetchNotes = async () => {
     try {
-      const response = await fetch('/api/supabase/notes');
-      if (!response.ok) throw new Error('Failed to fetch notes');
+      const response = await fetch("/api/supabase/notes");
+      if (!response.ok) throw new Error("Failed to fetch notes");
       const data = await response.json();
       setNotes(data.items);
     } catch (error) {
-      console.error('Error fetching notes:', error);
+      console.error("Error fetching notes:", error);
     } finally {
       setLoading(false);
     }
@@ -41,29 +41,29 @@ export default function NotesSection() {
   }, []);
 
   const saveRawNote = useCallback(async () => {
-    const fromInput = rawInputRef.current?.value?.trim() ?? '';
+    const fromInput = rawInputRef.current?.value?.trim() ?? "";
     const content = fromInput || rawCaptureRef.current.trim();
     if (!content) return;
     try {
-      const response = await fetch('/api/supabase/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/supabase/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
       if (response.ok) {
-        setRawCapture('');
-        if (rawInputRef.current) rawInputRef.current.value = '';
+        setRawCapture("");
+        if (rawInputRef.current) rawInputRef.current.value = "";
         await fetchNotes();
       }
     } catch (e) {
-      console.error('Error saving raw note:', e);
+      console.error("Error saving raw note:", e);
     }
   }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMod = e.metaKey || e.ctrlKey;
-      if (isMod && e.key === 'Enter') {
+      if (isMod && e.key === "Enter") {
         if (e.shiftKey) {
           e.preventDefault();
           e.stopPropagation();
@@ -75,13 +75,13 @@ export default function NotesSection() {
         }
       }
     };
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [saveRawNote]);
 
   const openAddModal = () => {
     setEditingNote(null);
-    setModalContent('');
+    setModalContent("");
     setIsModalOpen(true);
   };
 
@@ -94,7 +94,7 @@ export default function NotesSection() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingNote(null);
-    setModalContent('');
+    setModalContent("");
   };
 
   const saveNote = async () => {
@@ -104,9 +104,9 @@ export default function NotesSection() {
     try {
       if (editingNote) {
         // Update existing note
-        const response = await fetch('/api/supabase/notes', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/supabase/notes", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: editingNote.id, content }),
         });
         if (response.ok) {
@@ -115,9 +115,9 @@ export default function NotesSection() {
         }
       } else {
         // Create new note
-        const response = await fetch('/api/supabase/notes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/supabase/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content }),
         });
         if (response.ok) {
@@ -126,22 +126,22 @@ export default function NotesSection() {
         }
       }
     } catch (error) {
-      console.error('Error saving note:', error);
+      console.error("Error saving note:", error);
     }
   };
 
   const deleteNote = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return;
+    if (!confirm("Are you sure you want to delete this note?")) return;
 
     try {
       const response = await fetch(`/api/supabase/notes?id=${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       if (response.ok) {
         await fetchNotes();
       }
     } catch (error) {
-      console.error('Error deleting note:', error);
+      console.error("Error deleting note:", error);
     }
   };
 
@@ -157,7 +157,9 @@ export default function NotesSection() {
     <>
       <div className="crt-panel rounded-sm p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright tracking-wide">Notes</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright tracking-wide">
+            Notes
+          </h2>
           <button
             onClick={openAddModal}
             className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
@@ -178,7 +180,11 @@ export default function NotesSection() {
             value={rawCapture}
             onChange={(e) => setRawCapture(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+              if (
+                e.key === "Enter" &&
+                (e.metaKey || e.ctrlKey) &&
+                !e.shiftKey
+              ) {
                 e.preventDefault();
                 e.stopPropagation();
                 saveRawNote();
@@ -234,7 +240,7 @@ export default function NotesSection() {
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
-        title={editingNote ? 'Edit Note' : 'Add Note'}
+        title={editingNote ? "Edit Note" : "Add Note"}
       >
         <div className="space-y-4">
           <textarea
@@ -245,7 +251,7 @@ export default function NotesSection() {
             rows={8}
             placeholder="Enter your note..."
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                 saveNote();
               }
             }}
@@ -261,7 +267,7 @@ export default function NotesSection() {
               onClick={saveNote}
               className="px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
-              {editingNote ? 'Update' : 'Create'}
+              {editingNote ? "Update" : "Create"}
             </button>
           </div>
         </div>
@@ -269,4 +275,3 @@ export default function NotesSection() {
     </>
   );
 }
-

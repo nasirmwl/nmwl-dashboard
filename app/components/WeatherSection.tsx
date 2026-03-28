@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
 
 interface HourlyWeather {
   time: string;
@@ -54,15 +54,17 @@ interface WeatherResponse {
 }
 
 const hasRain = (hourly: HourlyWeather[]): boolean =>
-  hourly.some(hour => (hour.rainProbability || 0) > 0 || (hour.rainVolume || 0) > 0);
+  hourly.some(
+    (hour) => (hour.rainProbability || 0) > 0 || (hour.rainVolume || 0) > 0,
+  );
 
 const getMaxRainProbability = (hourly: HourlyWeather[]): number =>
-  Math.max(...hourly.map(hour => hour.rainProbability || 0), 0);
+  Math.max(...hourly.map((hour) => hour.rainProbability || 0), 0);
 
 const formatHour = (hour: number): string => {
-  if (hour === 0) return '12am';
+  if (hour === 0) return "12am";
   if (hour < 12) return `${hour}am`;
-  if (hour === 12) return '12pm';
+  if (hour === 12) return "12pm";
   return `${hour - 12}pm`;
 };
 
@@ -78,12 +80,17 @@ function CollapsibleHourlyList({ hourly }: { hourly: HourlyWeather[] }) {
       >
         Hourly
         <svg
-          className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {open && (
@@ -93,8 +100,12 @@ function CollapsibleHourlyList({ hourly }: { hourly: HourlyWeather[] }) {
               key={i}
               className="flex items-center justify-between text-xs p-1.5 bg-crt-bg/80 rounded-sm border border-crt-border"
             >
-              <span className="font-medium w-9 text-crt-muted">{formatHour(hour.hour)}</span>
-              <span className="font-semibold text-crt-phosphor-bright">{hour.temp}°</span>
+              <span className="font-medium w-9 text-crt-muted">
+                {formatHour(hour.hour)}
+              </span>
+              <span className="font-semibold text-crt-phosphor-bright">
+                {hour.temp}°
+              </span>
               <span className="text-crt-muted capitalize truncate max-w-[80px] crt-text-plain">
                 {hour.description}
               </span>
@@ -114,13 +125,17 @@ function WeatherPlaceCard({ data }: { data: LocationWeather }) {
 
   return (
     <div className="rounded-sm border border-crt-border bg-crt-bar-track/60 p-4 crt-text-plain">
-      <h3 className="text-sm font-semibold text-crt-phosphor-bright mb-3 tracking-wide">{data.name}</h3>
+      <h3 className="text-sm font-semibold text-crt-phosphor-bright mb-3 tracking-wide">
+        {data.name}
+      </h3>
 
       <div className="flex items-center justify-between mb-3 pb-3 border-b border-crt-border">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-medium text-crt-muted">Today</span>
-            <span className="text-xs text-crt-phosphor-dim">{format(today, 'MMM d')}</span>
+            <span className="text-xs text-crt-phosphor-dim">
+              {format(today, "MMM d")}
+            </span>
             {data.today.current && (
               <>
                 <span className="text-xl font-bold text-crt-phosphor-bright">
@@ -130,7 +145,9 @@ function WeatherPlaceCard({ data }: { data: LocationWeather }) {
                   {data.today.current.description}
                 </span>
                 {maxRainProbability > 0 && (
-                  <span className="text-xs text-crt-muted">🌧️ {maxRainProbability}%</span>
+                  <span className="text-xs text-crt-muted">
+                    🌧️ {maxRainProbability}%
+                  </span>
                 )}
               </>
             )}
@@ -150,35 +167,52 @@ function WeatherPlaceCard({ data }: { data: LocationWeather }) {
 
       <div className="border-t border-crt-border pt-2 space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-crt-muted crt-text-plain">Tomorrow {format(tomorrow, 'MMM d')}</span>
+          <span className="text-crt-muted crt-text-plain">
+            Tomorrow {format(tomorrow, "MMM d")}
+          </span>
           {data.tomorrow.hourly.length > 0 && (
             <span className="font-semibold text-crt-phosphor-bright">
-              {data.tomorrow.hourly[0]?.temp}° – {Math.max(...data.tomorrow.hourly.map(h => h.temp))}°
+              {data.tomorrow.hourly[0]?.temp}° –{" "}
+              {Math.max(...data.tomorrow.hourly.map((h) => h.temp))}°
             </span>
           )}
         </div>
         <CollapsibleHourlyList hourly={data.tomorrow.hourly} />
         {(data.saturday?.min != null || data.sunday?.min != null) && (
           <>
-            <div className="text-xs font-medium text-crt-muted pt-1 crt-text-plain">Weekend</div>
+            <div className="text-xs font-medium text-crt-muted pt-1 crt-text-plain">
+              Weekend
+            </div>
             <div className="grid grid-cols-2 gap-2">
               {data.saturday?.min != null && (
                 <div className="text-xs p-2 bg-crt-bg/80 rounded-sm border border-crt-border crt-text-plain">
                   <div className="font-medium text-crt-phosphor">Sat</div>
-                  <div className="font-semibold text-crt-phosphor-bright">{data.saturday.min}° – {data.saturday.max}°</div>
-                  <div className="text-crt-muted capitalize truncate">{data.saturday.description}</div>
+                  <div className="font-semibold text-crt-phosphor-bright">
+                    {data.saturday.min}° – {data.saturday.max}°
+                  </div>
+                  <div className="text-crt-muted capitalize truncate">
+                    {data.saturday.description}
+                  </div>
                   {data.saturday.rainProbability > 0 && (
-                    <div className="text-crt-muted">🌧️ {data.saturday.rainProbability}%</div>
+                    <div className="text-crt-muted">
+                      🌧️ {data.saturday.rainProbability}%
+                    </div>
                   )}
                 </div>
               )}
               {data.sunday?.min != null && (
                 <div className="text-xs p-2 bg-crt-bg/80 rounded-sm border border-crt-border crt-text-plain">
                   <div className="font-medium text-crt-phosphor">Sun</div>
-                  <div className="font-semibold text-crt-phosphor-bright">{data.sunday.min}° – {data.sunday.max}°</div>
-                  <div className="text-crt-muted capitalize truncate">{data.sunday.description}</div>
+                  <div className="font-semibold text-crt-phosphor-bright">
+                    {data.sunday.min}° – {data.sunday.max}°
+                  </div>
+                  <div className="text-crt-muted capitalize truncate">
+                    {data.sunday.description}
+                  </div>
                   {data.sunday.rainProbability > 0 && (
-                    <div className="text-crt-muted">🌧️ {data.sunday.rainProbability}%</div>
+                    <div className="text-crt-muted">
+                      🌧️ {data.sunday.rainProbability}%
+                    </div>
                   )}
                 </div>
               )}
@@ -199,28 +233,35 @@ export default function WeatherSection() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/weather');
+      const response = await fetch("/api/weather");
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || `Failed to fetch weather (${response.status})`);
+        throw new Error(
+          err.error || `Failed to fetch weather (${response.status})`,
+        );
       }
       const data = await response.json();
-      const ensureHourlyTime = (h: any) => ({ ...h, time: h.time || new Date().toISOString() });
+      const ensureHourlyTime = (h: any) => ({
+        ...h,
+        time: h.time || new Date().toISOString(),
+      });
       if (data.baku?.today?.hourly) {
         data.baku.today.hourly = data.baku.today.hourly.map(ensureHourlyTime);
       }
       if (data.baku?.tomorrow?.hourly) {
-        data.baku.tomorrow.hourly = data.baku.tomorrow.hourly.map(ensureHourlyTime);
+        data.baku.tomorrow.hourly =
+          data.baku.tomorrow.hourly.map(ensureHourlyTime);
       }
       if (data.lahij?.today?.hourly) {
         data.lahij.today.hourly = data.lahij.today.hourly.map(ensureHourlyTime);
       }
       if (data.lahij?.tomorrow?.hourly) {
-        data.lahij.tomorrow.hourly = data.lahij.tomorrow.hourly.map(ensureHourlyTime);
+        data.lahij.tomorrow.hourly =
+          data.lahij.tomorrow.hourly.map(ensureHourlyTime);
       }
       setWeather(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load weather');
+      setError(err.message || "Failed to load weather");
     } finally {
       setLoading(false);
     }
@@ -242,7 +283,9 @@ export default function WeatherSection() {
     return (
       <div className="crt-panel rounded-sm p-4 sm:p-6">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-crt-danger font-medium text-sm crt-text-plain">{error || 'Failed to load weather'}</p>
+          <p className="text-crt-danger font-medium text-sm crt-text-plain">
+            {error || "Failed to load weather"}
+          </p>
           <button
             onClick={fetchWeather}
             disabled={loading}
@@ -257,7 +300,9 @@ export default function WeatherSection() {
 
   return (
     <div className="crt-panel rounded-sm p-4 sm:p-6">
-      <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright mb-4 tracking-wide">Weather</h2>
+      <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright mb-4 tracking-wide">
+        Weather
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <WeatherPlaceCard data={weather.baku} />
         <WeatherPlaceCard data={weather.lahij} />

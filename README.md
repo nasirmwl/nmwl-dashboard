@@ -1,8 +1,8 @@
 # Personal Dashboard
 
 Private Next.js dashboard with a green CRT-style UI.
-![Dashboard Old Style](./dashboard-old-style.png)
-![Dashboard New Style](./dashboard-new-style.png)
+![Dashboard Old Style](public/dashboard-old-style.png)
+![Dashboard New Style](public/dashboard-new-style.png)
 
 ## Run locally
 

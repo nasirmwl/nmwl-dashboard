@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Calendar, Edit2, Plus, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Calendar, Edit2, Plus, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
-import Modal from './Modal';
-import { format } from 'date-fns';
+import Modal from "./Modal";
+import { format } from "date-fns";
 
 interface DailyFocus {
   id: string;
@@ -20,18 +20,18 @@ export default function DailyFocusSection() {
   const [isClient, setIsClient] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailyFocus | null>(null);
-  const [modalContent, setModalContent] = useState('');
+  const [modalContent, setModalContent] = useState("");
   const [modalDate, setModalDate] = useState<string | null>(null);
   const [modalReminderAt, setModalReminderAt] = useState<string | null>(null);
 
   const fetchFocusItems = async () => {
     try {
-      const response = await fetch('/api/supabase/daily-focus');
-      if (!response.ok) throw new Error('Failed to fetch daily focus items');
+      const response = await fetch("/api/supabase/daily-focus");
+      if (!response.ok) throw new Error("Failed to fetch daily focus items");
       const data = await response.json();
       setFocusItems(data.items);
     } catch (error) {
-      console.error('Error fetching daily focus items:', error);
+      console.error("Error fetching daily focus items:", error);
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export default function DailyFocusSection() {
 
   const openAddModal = () => {
     setEditingItem(null);
-    setModalContent('');
+    setModalContent("");
     setModalDate(null);
     setModalReminderAt(null);
     setIsModalOpen(true);
@@ -61,7 +61,7 @@ export default function DailyFocusSection() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingItem(null);
-    setModalContent('');
+    setModalContent("");
     setModalDate(null);
     setModalReminderAt(null);
   };
@@ -70,14 +70,16 @@ export default function DailyFocusSection() {
     const content = modalContent.trim();
     if (!content) return;
 
-    const reminderAtIso = modalReminderAt ? new Date(modalReminderAt).toISOString() : null;
+    const reminderAtIso = modalReminderAt
+      ? new Date(modalReminderAt).toISOString()
+      : null;
 
     try {
       if (editingItem) {
         // Update existing item
-        const response = await fetch('/api/supabase/daily-focus', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/supabase/daily-focus", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: editingItem.id,
             content,
@@ -91,9 +93,9 @@ export default function DailyFocusSection() {
         }
       } else {
         // Create new item
-        const response = await fetch('/api/supabase/daily-focus', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/supabase/daily-focus", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             content,
             date: modalDate,
@@ -106,22 +108,22 @@ export default function DailyFocusSection() {
         }
       }
     } catch (error) {
-      console.error('Error saving daily focus item:', error);
+      console.error("Error saving daily focus item:", error);
     }
   };
 
   const deleteFocusItem = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this event?')) return;
+    if (!confirm("Are you sure you want to delete this event?")) return;
 
     try {
       const response = await fetch(`/api/supabase/daily-focus?id=${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       if (response.ok) {
         await fetchFocusItems();
       }
     } catch (error) {
-      console.error('Error deleting daily focus item:', error);
+      console.error("Error deleting daily focus item:", error);
     }
   };
 
@@ -137,7 +139,9 @@ export default function DailyFocusSection() {
     <>
       <div className="crt-panel rounded-sm p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright tracking-wide">Reminders</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright tracking-wide">
+            Reminders
+          </h2>
           <button
             onClick={openAddModal}
             className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
@@ -167,19 +171,29 @@ export default function DailyFocusSection() {
                   {item.date && (
                     <div className="flex items-center gap-2 text-sm text-crt-muted">
                       <Calendar className="w-4 h-4" />
-                      <span>{format(new Date(item.date), 'MMM d, yyyy')}</span>
+                      <span>{format(new Date(item.date), "MMM d, yyyy")}</span>
                     </div>
                   )}
                   {item.reminderAt && (
                     <div className="flex items-center gap-2 text-xs text-crt-muted mt-1">
                       <span className="font-medium">Remind at:</span>
-                      <span>{format(new Date(item.reminderAt), 'MMM d, yyyy h:mm a')}</span>
+                      <span>
+                        {format(
+                          new Date(item.reminderAt),
+                          "MMM d, yyyy h:mm a",
+                        )}
+                      </span>
                     </div>
                   )}
                   {item.notifiedAt && (
                     <div className="flex items-center gap-2 text-[11px] text-crt-phosphor-dim mt-0.5">
                       <span>Notified:</span>
-                      <span>{format(new Date(item.notifiedAt), 'MMM d, yyyy h:mm a')}</span>
+                      <span>
+                        {format(
+                          new Date(item.notifiedAt),
+                          "MMM d, yyyy h:mm a",
+                        )}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -206,7 +220,7 @@ export default function DailyFocusSection() {
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
-        title={editingItem ? 'Edit Reminder' : 'Add Reminder'}
+        title={editingItem ? "Edit Reminder" : "Add Reminder"}
       >
         <div className="space-y-4">
           <textarea
@@ -217,7 +231,7 @@ export default function DailyFocusSection() {
             rows={8}
             placeholder="Enter your reminder..."
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                 saveFocusItem();
               }
             }}
@@ -227,7 +241,7 @@ export default function DailyFocusSection() {
               <Calendar className="w-5 h-5 text-crt-phosphor-dim" />
               <input
                 type="date"
-                value={modalDate || ''}
+                value={modalDate || ""}
                 onChange={(e) => setModalDate(e.target.value || null)}
                 className="flex-1 px-4 py-3 crt-input rounded-sm"
               />
@@ -238,7 +252,7 @@ export default function DailyFocusSection() {
               </span>
               <input
                 type="datetime-local"
-                value={modalReminderAt || ''}
+                value={modalReminderAt || ""}
                 onChange={(e) => setModalReminderAt(e.target.value || null)}
                 className="flex-1 px-4 py-3 crt-input rounded-sm"
               />
@@ -255,7 +269,7 @@ export default function DailyFocusSection() {
               onClick={saveFocusItem}
               className="px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
-              {editingItem ? 'Update' : 'Create'}
+              {editingItem ? "Update" : "Create"}
             </button>
           </div>
         </div>
@@ -263,4 +277,3 @@ export default function DailyFocusSection() {
     </>
   );
 }
-
