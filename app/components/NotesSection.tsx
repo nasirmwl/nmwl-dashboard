@@ -1,9 +1,10 @@
 "use client";
 
-import { Edit2, Plus, X } from "lucide-react";
+import { Edit2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import Modal from "./Modal";
+import SectionBox from "./SectionBox";
 
 interface Note {
   id: string;
@@ -79,12 +80,6 @@ export default function NotesSection() {
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [saveRawNote]);
 
-  const openAddModal = () => {
-    setEditingNote(null);
-    setModalContent("");
-    setIsModalOpen(true);
-  };
-
   const openEditModal = (note: Note) => {
     setEditingNote(note);
     setModalContent(note.content);
@@ -99,31 +94,17 @@ export default function NotesSection() {
 
   const saveNote = async () => {
     const content = modalContent.trim();
-    if (!content) return;
+    if (!content || !editingNote) return;
 
     try {
-      if (editingNote) {
-        // Update existing note
-        const response = await fetch("/api/supabase/notes", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingNote.id, content }),
-        });
-        if (response.ok) {
-          await fetchNotes();
-          closeModal();
-        }
-      } else {
-        // Create new note
-        const response = await fetch("/api/supabase/notes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content }),
-        });
-        if (response.ok) {
-          await fetchNotes();
-          closeModal();
-        }
+      const response = await fetch("/api/supabase/notes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingNote.id, content }),
+      });
+      if (response.ok) {
+        await fetchNotes();
+        closeModal();
       }
     } catch (error) {
       console.error("Error saving note:", error);
@@ -147,30 +128,15 @@ export default function NotesSection() {
 
   if (!isClient || loading) {
     return (
-      <div className="crt-panel rounded-sm p-4 sm:p-6">
+      <SectionBox title="Notes">
         <div className="animate-pulse h-32 bg-crt-bar-track/40 rounded-sm" />
-      </div>
+      </SectionBox>
     );
   }
 
   return (
     <>
-      <div className="crt-panel rounded-sm p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright tracking-wide">
-            Notes
-          </h2>
-          <button
-            onClick={openAddModal}
-            className="flex items-center justify-center gap-2 px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
-            aria-label="Add Note"
-          >
-            <Plus className="w-5 h-5 md:w-4 md:h-4" />
-            <span className="hidden md:inline">Add Note</span>
-            <span className="md:hidden">Add Note</span>
-          </button>
-        </div>
-
+      <SectionBox title="Notes">
         <div className="mb-4">
           <label className="block text-sm font-medium text-crt-muted mb-1 crt-text-plain uppercase tracking-wider text-xs">
             Raw capture
@@ -205,7 +171,10 @@ export default function NotesSection() {
 
         {notes.length === 0 ? (
           <div className="text-center py-12 text-crt-muted crt-text-plain">
-            <p>No notes yet. Click "Add Note" to create one.</p>
+            <p>
+              No notes yet. Type in raw capture and use Cmd+Enter (Ctrl+Enter) to
+              save.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -235,12 +204,12 @@ export default function NotesSection() {
             ))}
           </div>
         )}
-      </div>
+      </SectionBox>
 
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
-        title={editingNote ? "Edit Note" : "Add Note"}
+        title="Edit Note"
       >
         <div className="space-y-4">
           <textarea
@@ -267,7 +236,7 @@ export default function NotesSection() {
               onClick={saveNote}
               className="px-5 py-3.5 md:px-4 md:py-2 crt-btn crt-btn-primary rounded-sm transition-colors text-base md:text-sm min-h-[44px] w-full sm:w-auto"
             >
-              {editingNote ? "Update" : "Create"}
+              Update
             </button>
           </div>
         </div>

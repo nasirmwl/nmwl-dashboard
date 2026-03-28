@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import SectionBox from "./SectionBox";
 import { format } from "date-fns";
 
 interface HourlyWeather {
@@ -275,13 +277,15 @@ export default function WeatherSection() {
 
   if (loading) {
     return (
-      <div className="crt-panel rounded-sm p-4 sm:p-6 animate-pulse h-48 border-crt-border" />
+      <SectionBox title="Weather">
+        <div className="animate-pulse h-48 bg-crt-bar-track/40 rounded-sm border border-crt-border" />
+      </SectionBox>
     );
   }
 
   if (error || !weather) {
     return (
-      <div className="crt-panel rounded-sm p-4 sm:p-6">
+      <SectionBox title="Weather">
         <div className="flex items-center justify-between gap-4">
           <p className="text-crt-danger font-medium text-sm crt-text-plain">
             {error || "Failed to load weather"}
@@ -294,19 +298,16 @@ export default function WeatherSection() {
             Retry
           </button>
         </div>
-      </div>
+      </SectionBox>
     );
   }
 
   return (
-    <div className="crt-panel rounded-sm p-4 sm:p-6">
-      <h2 className="text-xl sm:text-2xl font-bold text-crt-phosphor-bright mb-4 tracking-wide">
-        Weather
-      </h2>
+    <SectionBox title="Weather">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <WeatherPlaceCard data={weather.baku} />
         <WeatherPlaceCard data={weather.lahij} />
       </div>
-    </div>
+    </SectionBox>
   );
 }
