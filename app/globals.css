@@ -1,16 +1,24 @@
 @import "tailwindcss";
 
-/* Green terminal — saturated phosphor (reads clearly as green, not white-on-black) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* CRT terminal — softer forest phosphor (aligned with stat-panel reference) */
 :root {
-  --crt-bg: #000000;
-  --crt-panel: #050c08;
-  --crt-border: #2d6b45;
-  --crt-border-glow: rgba(45, 107, 69, 0.45);
-  --crt-phosphor: #3ecf7f;
-  --crt-phosphor-bright: #5dff9a;
-  --crt-phosphor-dim: #2d8f55;
-  --crt-muted: #4a9e6a;
-  --crt-bar-track: #07120c;
+  --crt-bg: #070a08;
+  --crt-panel: #0c100d;
+  --crt-border: #1a3d28;
+  --crt-border-glow: rgba(94, 227, 151, 0.08);
+  --crt-phosphor: #5ee397;
+  --crt-phosphor-bright: #9effc0;
+  --crt-phosphor-dim: #2d6b45;
+  --crt-muted: #6b9e7e;
+  --crt-bar-track: #0f1f14;
+  --crt-glow: 0 0 8px rgba(94, 227, 151, 0.35);
+  --bar-fill: var(--crt-phosphor-bright);
   --crt-danger: #ff6b6b;
   --crt-danger-dim: #8b3a3a;
 }
@@ -27,6 +35,7 @@
   --color-crt-muted: var(--crt-muted);
   --color-crt-bar-track: var(--crt-bar-track);
   --color-crt-danger: var(--crt-danger);
+  --color-crt-danger-dim: var(--crt-danger-dim);
   --font-sans: var(--font-geist-mono);
   --font-mono: var(--font-geist-mono);
 }
@@ -44,13 +53,13 @@ html {
 }
 
 body {
+  margin: 0;
   min-height: 100vh;
   background: var(--crt-bg);
   color: var(--crt-phosphor);
   font-family: var(--font-geist-mono), ui-monospace, "Cascadia Code", "SF Mono", Menlo,
     Monaco, Consolas, monospace;
-  /* Light bloom so type stays crisp but still feels CRT */
-  text-shadow: 0 0 6px rgba(61, 255, 140, 0.28);
+  text-shadow: var(--crt-glow);
 }
 
 /* Subtle green fog + scanlines (full viewport, behind content) */
@@ -66,7 +75,7 @@ body {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 120% 80% at 50% 0%, rgba(0, 90, 45, 0.14), transparent 55%),
+    radial-gradient(ellipse 120% 80% at 50% 0%, rgba(94, 227, 151, 0.06), transparent 55%),
     repeating-linear-gradient(
       transparent 0,
       transparent 2px,
@@ -78,6 +87,17 @@ body {
 .crt-screen > * {
   position: relative;
   z-index: 1;
+}
+
+/* tsparticles — cyberpunk grid behind UI (subtle, not overpowering) */
+.crt-particles canvas {
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-particles canvas {
+    opacity: 0.35;
+  }
 }
 
 .crt-text-plain {
@@ -92,8 +112,7 @@ body {
   border-radius: 2px;
   box-shadow:
     0 0 0 1px var(--crt-border-glow),
-    0 0 24px rgba(61, 255, 140, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.65);
+    0 16px 48px rgba(0, 0, 0, 0.55);
   overflow: hidden;
 }
 
@@ -106,8 +125,8 @@ body {
   background: repeating-linear-gradient(
     transparent 0,
     transparent 2px,
-    rgba(0, 0, 0, 0.18) 2px,
-    rgba(0, 0, 0, 0.18) 4px
+    rgba(0, 0, 0, 0.14) 2px,
+    rgba(0, 0, 0, 0.14) 4px
   );
 }
 
@@ -134,15 +153,16 @@ body {
 }
 
 .crt-btn {
-  background: rgba(7, 18, 12, 0.85);
-  border: 1px solid var(--crt-phosphor-dim);
-  color: var(--crt-phosphor-bright);
+  background: rgba(10, 26, 18, 0.92);
+  border: 1px solid var(--crt-border);
+  color: var(--crt-phosphor);
   text-shadow: none;
 }
 
 .crt-btn:hover {
-  border-color: var(--crt-phosphor-bright);
-  box-shadow: 0 0 12px rgba(61, 255, 140, 0.12);
+  border-color: var(--crt-phosphor-dim);
+  color: color-mix(in srgb, var(--crt-phosphor-bright) 42%, var(--crt-phosphor));
+  box-shadow: 0 0 8px rgba(94, 227, 151, 0.06);
 }
 
 .crt-btn:focus-visible {
@@ -151,8 +171,15 @@ body {
 }
 
 .crt-btn-primary {
-  background: rgba(10, 40, 22, 0.95);
-  border-color: var(--crt-phosphor-bright);
+  background: rgba(11, 32, 20, 0.94);
+  border-color: var(--crt-phosphor-dim);
+  color: var(--crt-phosphor);
+}
+
+.crt-btn-primary:hover {
+  border-color: var(--crt-phosphor);
+  color: color-mix(in srgb, var(--crt-phosphor-bright) 48%, var(--crt-phosphor));
+  box-shadow: 0 0 10px rgba(94, 227, 151, 0.08);
 }
 
 .crt-btn-danger {
@@ -162,4 +189,87 @@ body {
 
 .crt-btn-danger:hover {
   border-color: var(--crt-danger);
+}
+
+/* ME section — personal stat bars */
+.me-stat-row {
+  display: grid;
+  /* Tight single-letter column + bar + value */
+  grid-template-columns: 1ch minmax(0, 1fr) 2rem;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 0.45rem;
+}
+
+@media (min-width: 480px) {
+  .me-stat-row {
+    grid-template-columns: 1ch minmax(0, 1fr) 2.25rem;
+  }
+}
+
+.me-stat-label {
+  display: inline-block;
+  box-sizing: content-box;
+  width: 1ch;
+  min-width: 0;
+  max-width: 1ch;
+  justify-self: start;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--crt-muted);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.me-stat-track {
+  height: 12px;
+  background-color: var(--crt-bar-track);
+  /* Subtle vertical grid in empty track */
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.45) 0 1px,
+    transparent 1px 4px
+  );
+  border-radius: 0;
+  overflow: hidden;
+  border: 1px solid rgba(94, 227, 151, 0.22);
+  image-rendering: pixelated;
+}
+
+.me-stat-fill {
+  height: 100%;
+  min-width: 0;
+  border-radius: 0;
+  /* Particled fill: staggered dot layers (void shows through — not a solid slab) */
+  --me-void: color-mix(in srgb, var(--crt-bar-track) 94%, #030805);
+  --me-p: var(--bar-fill);
+  --me-p-mid: color-mix(in srgb, var(--bar-fill) 52%, var(--me-void));
+  --me-p-faint: color-mix(in srgb, var(--bar-fill) 28%, transparent);
+  background-color: var(--me-void);
+  background-image:
+    radial-gradient(circle at 2px 2px, var(--me-p) 0.65px, transparent 0.7px),
+    radial-gradient(circle at 2px 2px, var(--me-p-mid) 0.42px, transparent 0.46px),
+    radial-gradient(circle at 2px 2px, var(--me-p-faint) 0.3px, transparent 0.34px);
+  background-size: 4px 4px;
+  background-position:
+    0 0,
+    2px 2px,
+    2px 0;
+  background-repeat: repeat;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: width 0.35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .me-stat-fill {
+    transition: none;
+  }
+}
+
+.me-stat-value {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--crt-phosphor-bright);
 }

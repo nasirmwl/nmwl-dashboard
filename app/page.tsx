@@ -1,10 +1,11 @@
 'use client';
 
 import DailyFocusSection from './components/DailyFocusSection';
+import MeSection from './components/MeSection';
 import NotesSection from './components/NotesSection';
 import PodcastsSection from './components/PodcastsSection';
 import ProtectedPage from './components/ProtectedPage';
-import WeatherSection from './components/WeatherSection';
+// import WeatherSection from './components/WeatherSection';
 import { useGlobalToggleShortcut } from './hooks/useSectionToggle';
 
 export default function Home() {
@@ -13,12 +14,15 @@ export default function Home() {
   return (
     <ProtectedPage>
       <div className="crt-screen min-h-screen bg-crt-bg">
-        <main className="container mx-auto px-4 sm:px-4 py-6 sm:py-8 max-w-7xl">
+        <main className="mx-auto w-full max-w-[700px] px-4 sm:px-4 py-6 sm:py-8">
           <div className="space-y-6 sm:space-y-8">
-            {/* Weather at top */}
             <section>
-              <WeatherSection />
+              <MeSection />
             </section>
+
+            {/* <section>
+              <WeatherSection />
+            </section> */}
 
             {/* Notes – raw capture */}
             <section>

@@ -19,6 +19,7 @@ export default function NotesSection() {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [modalContent, setModalContent] = useState("");
   const [rawCapture, setRawCapture] = useState("");
+  const [notesVisible, setNotesVisible] = useState(false);
   const rawInputRef = useRef<HTMLTextAreaElement>(null);
   const rawCaptureRef = useRef(rawCapture);
   rawCaptureRef.current = rawCapture;
@@ -160,57 +161,71 @@ export default function NotesSection() {
             className="w-full px-4 py-3 crt-input rounded-sm resize-none text-sm"
             rows={3}
           />
-          <button
-            onClick={saveRawNote}
-            disabled={!rawCapture.trim()}
-            className="mt-2 px-4 py-2 crt-btn rounded-sm disabled:opacity-50 disabled:pointer-events-none text-sm"
-          >
-            Save raw note
-          </button>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <button
+              type="button"
+              onClick={saveRawNote}
+              disabled={!rawCapture.trim()}
+              className="px-4 py-2 crt-btn rounded-sm disabled:opacity-50 disabled:pointer-events-none text-sm w-full sm:w-auto"
+            >
+              Save raw note
+            </button>
+            <button
+              type="button"
+              onClick={() => setNotesVisible((v) => !v)}
+              className="px-4 py-2 crt-btn crt-btn-primary rounded-sm text-sm w-full sm:w-auto crt-text-plain"
+              aria-expanded={notesVisible}
+            >
+              {notesVisible
+                ? "Hide notes"
+                : notes.length > 0
+                  ? `View notes (${notes.length})`
+                  : "View notes"}
+            </button>
+          </div>
         </div>
 
-        {notes.length === 0 ? (
-          <div className="text-center py-12 text-crt-muted crt-text-plain">
-            <p>
-              No notes yet. Type in raw capture and use Cmd+Enter (Ctrl+Enter) to
-              save.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {notes.map((note) => (
-              <div
-                key={note.id}
-                className="group flex items-start gap-3 p-4 bg-crt-bar-track/40 rounded-sm border border-crt-border hover:border-crt-phosphor-dim transition-colors crt-text-plain"
-              >
-                <p className="flex-1 text-crt-phosphor-bright whitespace-pre-wrap">
-                  {note.content}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => openEditModal(note)}
-                    className="p-3.5 md:p-2 text-crt-phosphor hover:bg-crt-bar-track rounded-sm transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center crt-text-plain"
-                  >
-                    <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
-                  </button>
-                  <button
-                    onClick={() => deleteNote(note.id)}
-                    className="p-3.5 md:p-2 text-crt-danger hover:bg-crt-bar-track rounded-sm transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center crt-text-plain"
-                  >
-                    <X className="w-5 h-5 md:w-4 md:h-4" />
-                  </button>
+        {notesVisible &&
+          (notes.length === 0 ? (
+            <div className="text-center py-12 text-crt-muted crt-text-plain">
+              <p>
+                No notes yet. Type in raw capture and use Cmd+Enter
+                (Ctrl+Enter) to save.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {notes.map((note) => (
+                <div
+                  key={note.id}
+                  className="group flex items-start gap-3 p-4 bg-crt-bar-track/40 rounded-sm border border-crt-border hover:border-crt-phosphor-dim transition-colors crt-text-plain"
+                >
+                  <p className="flex-1 text-crt-phosphor-bright whitespace-pre-wrap">
+                    {note.content}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(note)}
+                      className="p-3.5 md:p-2 text-crt-phosphor hover:bg-crt-bar-track rounded-sm transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center crt-text-plain"
+                    >
+                      <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteNote(note.id)}
+                      className="p-3.5 md:p-2 text-crt-danger hover:bg-crt-bar-track rounded-sm transition-colors min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center crt-text-plain"
+                    >
+                      <X className="w-5 h-5 md:w-4 md:h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          ))}
       </SectionBox>
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        title="Edit Note"
-      >
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="Edit Note">
         <div className="space-y-4">
           <textarea
             autoFocus
