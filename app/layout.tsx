@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Personal Dashboard",
-  description: "Your personal dashboard with weather, notes, and Jira tasks",
+  description: "Your personal dashboard with weather, notes, and more",
 };
 
 export default function RootLayout({
