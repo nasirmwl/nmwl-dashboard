@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 
 // Hardcoded Jira credentials
-const JIRA_DOMAIN = 'nasirmovlamov-1754308528391.atlassian.net';
-const JIRA_EMAIL = 'nasirmovlamov@gmail.com';
-const JIRA_API_TOKEN = 'ATATT3xFfGF0Ob4obI2N7NqUUIrZmMyctUptKlkoCyCBJnJpnyWVcUIZYC1xGTvOC6MNNL4V0v3am3H5xMnsJoy7n3HMRPIhQGbw79OdUox4gW8cqcdpJj6IevpSB80T-Em27NYLlcqSO3XVxSMZitD-i5Ie9p-pdUvFkJGFSEyfZYgJvS0RNqI=72F39ED5';
+const JIRA_DOMAIN = '';
+const JIRA_EMAIL = '';
+const JIRA_API_TOKEN = '';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
