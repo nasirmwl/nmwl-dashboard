@@ -3,7 +3,7 @@
 import DailyFocusSection from './components/DailyFocusSection';
 import MeSection from './components/MeSection';
 import NotesSection from './components/NotesSection';
-import PodcastsSection from './components/PodcastsSection';
+// import PodcastsSection from './components/PodcastsSection';
 import ProtectedPage from './components/ProtectedPage';
 // import WeatherSection from './components/WeatherSection';
 import { useGlobalToggleShortcut } from './hooks/useSectionToggle';
@@ -29,9 +29,9 @@ export default function Home() {
               <NotesSection />
             </section>
 
-            <section>
+            {/* <section>
               <PodcastsSection />
-            </section>
+            </section> */}
 
             <section>
               <DailyFocusSection />

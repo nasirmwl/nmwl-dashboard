@@ -12,10 +12,10 @@
   --crt-panel: #0c100d;
   --crt-border: #1a3d28;
   --crt-border-glow: rgba(94, 227, 151, 0.08);
-  --crt-phosphor: #5ee397;
-  --crt-phosphor-bright: #9effc0;
-  --crt-phosphor-dim: #2d6b45;
-  --crt-muted: #6b9e7e;
+  --crt-phosphor: #6aed9f;
+  --crt-phosphor-bright: #b4ffc8;
+  --crt-phosphor-dim: #3d8f5c;
+  --crt-muted: #7cae8f;
   --crt-bar-track: #0f1f14;
   --crt-glow: 0 0 8px rgba(94, 227, 151, 0.35);
   --bar-fill: var(--crt-phosphor-bright);
@@ -55,7 +55,13 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--crt-bg);
+  /* Slight pixel grid on base color (shows through transparent areas / edges) */
+  background-color: var(--crt-bg);
+  background-image:
+    linear-gradient(90deg, rgba(158, 255, 192, 0.07) 1px, transparent 1px),
+    linear-gradient(rgba(158, 255, 192, 0.055) 1px, transparent 1px);
+  background-size: 3px 3px;
+  background-attachment: fixed;
   color: var(--crt-phosphor);
   font-family: var(--font-geist-mono), ui-monospace, "Cascadia Code", "SF Mono", Menlo,
     Monaco, Consolas, monospace;
@@ -77,6 +83,8 @@ body {
   /* Slightly lighter overlay so tsparticles remain visible between panels */
   opacity: 0.92;
   background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
     radial-gradient(ellipse 120% 80% at 50% 0%, rgba(94, 227, 151, 0.06), transparent 55%),
     repeating-linear-gradient(
       transparent 0,
@@ -84,6 +92,11 @@ body {
       rgba(0, 0, 0, 0.1) 2px,
       rgba(0, 0, 0, 0.1) 4px
     );
+  background-size:
+    4px 4px,
+    4px 4px,
+    auto,
+    auto;
 }
 
 .crt-screen > * {
@@ -92,13 +105,32 @@ body {
 }
 
 /* tsparticles — cyberpunk grid behind panels (visible in gutters & between sections) */
+/* Fine pixel lattice over the canvas (retro LCD / low-res feel) */
+.crt-particles::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.22) 1px, transparent 1px),
+    linear-gradient(rgba(0, 0, 0, 0.16) 1px, transparent 1px);
+  background-size: 4px 4px;
+  mix-blend-mode: multiply;
+}
+
 .crt-particles canvas {
-  opacity: 0.9;
+  opacity: 1;
+  filter: brightness(1.12) saturate(1.18);
+  /* Nearest-neighbor when the canvas is scaled (retina / layout) — slightly blockier pixels */
+  image-rendering: pixelated;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .crt-particles canvas {
-    opacity: 0.55;
+    opacity: 0.88;
+    filter: brightness(1.14) saturate(1.18);
   }
 }
 

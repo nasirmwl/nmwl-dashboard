@@ -10,8 +10,11 @@ const cyberOptions = {
   background: {
     color: { value: "transparent" },
   },
+  /* No link shadows (heavy). pauseOnOutsideViewport off — fixed layers can confuse IntersectionObserver. */
   fpsLimit: 60,
   detectRetina: true,
+  pauseOnBlur: true,
+  pauseOnOutsideViewport: false,
   interactivity: {
     events: {
       resize: { enable: true, delay: 0.5 },
@@ -19,19 +22,17 @@ const cyberOptions = {
   },
   particles: {
     color: {
-      value: ["#5ee397", "#9effc0", "#4a9e6a", "#2d6b45"],
+      value: ["#d4ffd8", "#9effc0", "#7ef0a8", "#b8ffc9", "#8effd4"],
     },
     links: {
-      blink: true,
-      color: { value: "#3d8f5c" },
+      blink: false,
+      color: { value: "#9effc0" },
       consent: false,
       distance: 110,
       enable: true,
-      opacity: 0.42,
+      opacity: 0.72,
       shadow: {
-        blur: 4,
-        color: { value: "#5ee397" },
-        enable: true,
+        enable: false,
       },
       triangles: { enable: false },
       width: 0.6,
@@ -42,28 +43,28 @@ const cyberOptions = {
       enable: true,
       outModes: { default: "bounce" },
       random: true,
-      speed: { min: 0.15, max: 0.55 },
+      speed: { min: 0.15, max: 0.5 },
       straight: false,
     },
     number: {
-      density: { enable: true, width: 800, height: 800 },
-      value: 72,
+      density: { enable: false },
+      value: 117,
     },
     opacity: {
-      value: { min: 0.35, max: 0.85 },
+      value: { min: 0.62, max: 0.98 },
       animation: {
         enable: true,
-        speed: 0.35,
+        speed: 0.25,
         sync: false,
       },
     },
     rotate: { value: { min: 0, max: 360 }, direction: "random" },
     shape: { type: "circle" },
     size: {
-      value: { min: 0.4, max: 1.6 },
+      value: { min: 0.55, max: 1.85 },
       animation: {
         enable: true,
-        speed: 1.2,
+        speed: 1,
         sync: false,
       },
     },
@@ -79,7 +80,7 @@ const reducedMotionOptions = {
     ...cyberOptions.particles,
     move: { enable: false },
     number: { value: 28, density: { enable: true, width: 1200, height: 1200 } },
-    opacity: { value: 0.35 },
+    opacity: { value: 0.62 },
     rotate: { value: 0 },
     size: { value: 1 },
   },
