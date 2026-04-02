@@ -6,43 +6,47 @@ import type { GrowthStatRow } from "@/lib/growth-stats";
 
 function StatBar({
   name,
+  detail,
   value,
   maxWeightPerDay,
 }: {
   name: string;
+  detail: string;
   value: number;
   maxWeightPerDay: number;
 }) {
   const clamped = Math.min(100, Math.max(0, value));
-  const letter = name.charAt(0).toUpperCase();
   return (
-    <div className="me-stat-row crt-text-plain relative hover:z-30">
-      <span
-        className="me-stat-label relative cursor-default justify-self-start group/me-tip"
-        aria-hidden="true"
-      >
-        {letter}
+    <div className="group/me-tip relative cursor-default hover:z-30">
+      <div className="me-stat-row crt-text-plain">
         <span
-          role="tooltip"
-          className="pointer-events-none absolute left-0 top-full z-50 mt-1 w-max max-w-[min(16rem,calc(100vw-2rem))] space-y-0.5 rounded-sm border border-crt-border bg-crt-panel px-2 py-1 text-left text-[10px] font-semibold normal-case tracking-wide text-crt-phosphor-bright opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.45)] transition-opacity duration-100 group-hover/me-tip:opacity-100 crt-text-plain"
+          className="me-stat-label justify-self-start text-left normal-case tracking-normal"
+          title={name}
         >
-          <span className="block">{name}</span>
-          <span className="block font-normal text-crt-muted">
-            Σ weight/day: {maxWeightPerDay} (14-day % uses this × 14)
-          </span>
+          {name}
+        </span>
+        <div
+          className="me-stat-track"
+          role="progressbar"
+          aria-valuenow={clamped}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${name}: ${clamped} percent`}
+        >
+          <div className="me-stat-fill" style={{ width: `${clamped}%` }} />
+        </div>
+        <span className="me-stat-value">{clamped}</span>
+      </div>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute left-0 top-full z-50 mt-1 w-max max-w-[min(18rem,calc(100vw-2rem))] space-y-1.5 rounded-sm border border-crt-border bg-crt-panel px-2.5 py-2 text-left text-[10px] font-semibold normal-case tracking-wide text-crt-phosphor-bright opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.45)] transition-opacity duration-100 group-hover/me-tip:opacity-100 crt-text-plain"
+      >
+        <span className="block">{name}</span>
+        <span className="block font-normal leading-snug text-crt-muted">{detail}</span>
+        <span className="block border-t border-crt-border pt-1.5 font-normal text-crt-muted">
+          Σ weight/day: {maxWeightPerDay} (14-day % uses this × 14)
         </span>
       </span>
-      <div
-        className="me-stat-track"
-        role="progressbar"
-        aria-valuenow={clamped}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={`${name}: ${clamped} percent`}
-      >
-        <div className="me-stat-fill" style={{ width: `${clamped}%` }} />
-      </div>
-      <span className="me-stat-value">{clamped}</span>
     </div>
   );
 }
@@ -144,6 +148,7 @@ export default function GrowthStatsPanel() {
           <StatBar
             key={s.id}
             name={s.label}
+            detail={s.detail}
             value={s.value}
             maxWeightPerDay={s.maxWeightPerDay ?? 0}
           />
