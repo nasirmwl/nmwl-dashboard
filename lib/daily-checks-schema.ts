@@ -30,6 +30,20 @@ export const DAILY_CHECK_SECTIONS = [
         label:
           "Did I stay within my social media limits based on Screen Zen?",
       },
+      { key: "ate_as_planned", label: "Ate in line with what I planned" },
+      {
+        key: "workspace_clean_eod",
+        label: "Workspace clean and organized at end of day",
+      },
+      {
+        key: "prepared_for_tomorrow",
+        label: "Prepared clothes / bag / gear for tomorrow",
+      },
+      {
+        key: "shipped_visible",
+        label: "Shipped something visible (PR, feature, improvement)",
+      },
+      { key: "acted_despite_low_motivation", label: "Acted despite low motivation" },
     ],
   },
   {
@@ -67,6 +81,7 @@ export const DAILY_CHECK_SECTIONS = [
         label:
           "Engaged in 10 minutes of 'pure' curiosity (reading/watching something unrelated to work or goals).",
       },
+      { key: "acted_despite_low_motivation", label: "Acted despite low motivation" },
     ],
   },
   {
@@ -97,6 +112,7 @@ export const DAILY_CHECK_SECTIONS = [
         key: "breathing_today",
         label: "Breathing exercises or intentional breathwork",
       },
+      { key: "ate_as_planned", label: "Ate in line with what I planned" },
     ],
   },
   {
@@ -173,6 +189,14 @@ export const DAILY_CHECK_SECTIONS = [
       {
         key: "gossip_with_anyone",
         label: "Did I gossip with anyone about anybody positive or negative?",
+      },
+      {
+        key: "avoided_snark_when_tense",
+        label: "Avoided passive-aggressive or sarcastic jabs when tense",
+      },
+      {
+        key: "added_value_no_return",
+        label: "Added value to someone without expecting return",
       },
     ],
   },

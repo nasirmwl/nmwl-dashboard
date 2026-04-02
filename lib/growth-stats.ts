@@ -1,6 +1,6 @@
 import type { DayEntry } from "./daily-checks-schema";
 
-export const SCORING_VERSION = "v2.8-weighted-strict14-utc";
+export const SCORING_VERSION = "v3.3-weighted-strict14-utc";
 export const GROWTH_STATS_WINDOW_DAYS = 14;
 
 export type FieldPolarity = "good_when_true" | "good_when_false";
@@ -50,6 +50,16 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
         weight: 8,
         polarity: "good_when_true",
       },
+      { section: "discipline", key: "ate_as_planned", weight: 8, polarity: "good_when_true" },
+      { section: "discipline", key: "workspace_clean_eod", weight: 4, polarity: "good_when_true" },
+      { section: "discipline", key: "prepared_for_tomorrow", weight: 5, polarity: "good_when_true" },
+      { section: "discipline", key: "shipped_visible", weight: 18, polarity: "good_when_true" },
+      {
+        section: "discipline",
+        key: "acted_despite_low_motivation",
+        weight: 20,
+        polarity: "good_when_true",
+      },
     ],
   },
   {
@@ -71,6 +81,12 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
         weight: 4,
         polarity: "good_when_true",
       },
+      {
+        section: "growth",
+        key: "acted_despite_low_motivation",
+        weight: 20,
+        polarity: "good_when_true",
+      },
     ],
   },
   {
@@ -82,6 +98,7 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       { section: "health", key: "movement_plan_done", weight: 8, polarity: "good_when_true" },
       { section: "health", key: "breathing_today", weight: 5, polarity: "good_when_true" },
       { section: "health", key: "symptoms_proactive", weight: 15, polarity: "good_when_true" },
+      { section: "health", key: "ate_as_planned", weight: 8, polarity: "good_when_true" },
     ],
   },
   {
@@ -93,6 +110,7 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       { section: "health", key: "mental_wellbeing_stable", weight: 8, polarity: "good_when_true" },
       { section: "health", key: "stress_manageable_work", weight: 12, polarity: "good_when_true" },
       { section: "health", key: "stress_manageable_home", weight: 15, polarity: "good_when_true" },
+      { section: "health", key: "ate_as_planned", weight: 8, polarity: "good_when_true" },
     ],
   },
   {
@@ -185,6 +203,18 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
         key: "gossip_with_anyone",
         weight: 15,
         polarity: "good_when_false",
+      },
+      {
+        section: "social",
+        key: "avoided_snark_when_tense",
+        weight: 7,
+        polarity: "good_when_true",
+      },
+      {
+        section: "social",
+        key: "added_value_no_return",
+        weight: 18,
+        polarity: "good_when_true",
       },
     ],
   },
