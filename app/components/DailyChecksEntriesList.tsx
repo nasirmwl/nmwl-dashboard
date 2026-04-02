@@ -114,7 +114,7 @@ export default function DailyChecksEntriesList() {
                       const rule = getGrowthFieldRule(fieldset.section, item.key);
                       return (
                         <li
-                          key={item.key}
+                          key={`${fieldset.section}-${item.key}`}
                           className="flex items-start gap-2.5 text-sm crt-text-plain"
                         >
                           <span

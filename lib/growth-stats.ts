@@ -1,6 +1,6 @@
 import type { DayEntry } from "./daily-checks-schema";
 
-export const SCORING_VERSION = "v2-weighted-strict14-utc";
+export const SCORING_VERSION = "v2.8-weighted-strict14-utc";
 export const GROWTH_STATS_WINDOW_DAYS = 14;
 
 export type FieldPolarity = "good_when_true" | "good_when_false";
@@ -27,9 +27,10 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
     detail:
       "Keeping promises to yourself, sticking to routines you said mattered, starting on time, and following through after a bad day. Not perfection — reliability relative to your own bar.",
     fields: [
-      { section: "discipline", key: "planned_done", weight: 9, polarity: "good_when_true" },
+      { section: "discipline", key: "planned_done", weight: 15, polarity: "good_when_true" },
       { section: "discipline", key: "meetings_friday_only", weight: 3, polarity: "good_when_true" },
       { section: "discipline", key: "wake_dedicated_time", weight: 10, polarity: "good_when_true" },
+      { section: "discipline", key: "no_late_to_work", weight: 12, polarity: "good_when_true" },
       {
         section: "discipline",
         key: "daily_report_dedicated_time",
@@ -37,6 +38,18 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
         polarity: "good_when_true",
       },
       { section: "discipline", key: "doing_unplanned_work", weight: 7, polarity: "good_when_true" },
+      {
+        section: "discipline",
+        key: "declined_misaligned_invitation",
+        weight: 12,
+        polarity: "good_when_true",
+      },
+      {
+        section: "discipline",
+        key: "screen_zen_social_limits",
+        weight: 8,
+        polarity: "good_when_true",
+      },
     ],
   },
   {
@@ -52,6 +65,12 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       { section: "growth", key: "fe_one_hour", weight: 10, polarity: "good_when_true" },
       { section: "growth", key: "ai_one_hour", weight: 10, polarity: "good_when_true" },
       { section: "growth", key: "ielts_one_hour", weight: 9, polarity: "good_when_true" },
+      {
+        section: "growth",
+        key: "pure_curiosity_ten_min",
+        weight: 4,
+        polarity: "good_when_true",
+      },
     ],
   },
   {
@@ -62,7 +81,7 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
     fields: [
       { section: "health", key: "movement_plan_done", weight: 8, polarity: "good_when_true" },
       { section: "health", key: "breathing_today", weight: 5, polarity: "good_when_true" },
-      { section: "health", key: "symptoms_proactive", weight: 7, polarity: "good_when_true" },
+      { section: "health", key: "symptoms_proactive", weight: 15, polarity: "good_when_true" },
     ],
   },
   {
@@ -71,8 +90,9 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
     detail:
       "Medical and dental care you actually get (checkups, screenings, chronic conditions), taking meds as prescribed, addressing symptoms instead of ignoring them, mental health (therapy, coping, stability), rest when you're sick, and how honestly \"healthy\" your body and mind feel — not a number on a scale, your lived sense of it.",
     fields: [
-      { section: "health", key: "mental_wellbeing_stable", weight: 10, polarity: "good_when_true" },
-      { section: "health", key: "stress_manageable", weight: 9, polarity: "good_when_true" },
+      { section: "health", key: "mental_wellbeing_stable", weight: 8, polarity: "good_when_true" },
+      { section: "health", key: "stress_manageable_work", weight: 12, polarity: "good_when_true" },
+      { section: "health", key: "stress_manageable_home", weight: 15, polarity: "good_when_true" },
     ],
   },
   {
@@ -98,7 +118,6 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
         weight: 7,
         polarity: "good_when_false",
       },
-      { section: "finance", key: "bought_something_needed", weight: 4, polarity: "good_when_true" },
     ],
   },
   {
@@ -111,6 +130,18 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       { section: "focus", key: "priority_moved", weight: 10, polarity: "good_when_true" },
       { section: "focus", key: "distractions_ok", weight: 7, polarity: "good_when_true" },
       { section: "focus", key: "closure", weight: 6, polarity: "good_when_true" },
+      {
+        section: "focus",
+        key: "declined_misaligned_invitation",
+        weight: 12,
+        polarity: "good_when_true",
+      },
+      {
+        section: "focus",
+        key: "screen_zen_social_limits",
+        weight: 8,
+        polarity: "good_when_true",
+      },
     ],
   },
   {
@@ -123,6 +154,38 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       { section: "relationships", key: "showed_up", weight: 9, polarity: "good_when_true" },
       { section: "relationships", key: "honesty_repair", weight: 8, polarity: "good_when_true" },
       { section: "relationships", key: "boundaries", weight: 8, polarity: "good_when_true" },
+    ],
+  },
+  {
+    id: "social",
+    label: "Social",
+    detail:
+      "Boundaries around sensitive information, avoiding unnecessary conflict and gossip, and showing up constructively in how you talk with people — not perfection, but honest self-accountability.",
+    fields: [
+      {
+        section: "social",
+        key: "shared_sensitive_info",
+        weight: 19,
+        polarity: "good_when_false",
+      },
+      {
+        section: "social",
+        key: "conflict_with_others",
+        weight: 20,
+        polarity: "good_when_false",
+      },
+      {
+        section: "social",
+        key: "constructive_communication",
+        weight: 12,
+        polarity: "good_when_true",
+      },
+      {
+        section: "social",
+        key: "gossip_with_anyone",
+        weight: 15,
+        polarity: "good_when_false",
+      },
     ],
   },
 ];

@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-import { DAILY_CHECK_SECTIONS, type DayEntry } from "@/lib/daily-checks-schema";
+import {
+  DAILY_CHECK_SECTIONS,
+  flatKeyForCheckbox,
+  type DayEntry,
+} from "@/lib/daily-checks-schema";
 import { getGrowthFieldRule } from "@/lib/growth-stats";
 
 const STORAGE_KEY = "nmwl-daily-checks";
@@ -33,10 +37,6 @@ function saveLog(log: Record<string, DayEntry>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(log));
 }
 
-function cellKey(section: string, key: string) {
-  return `${section}:${key}`;
-}
-
 function readCheckboxValue(day: DayEntry | undefined, section: string, dataKey: string): boolean {
   if (!day) return false;
   const sec = day[section];
@@ -55,7 +55,9 @@ function flatFromDay(day: DayEntry | undefined): Record<string, boolean> {
   const out: Record<string, boolean> = {};
   for (const s of SECTIONS) {
     for (const item of s.items) {
-      out[cellKey(s.section, item.key)] = readCheckboxValue(day, s.section, item.key);
+      const fk = flatKeyForCheckbox(s.section, item.key);
+      const v = readCheckboxValue(day, s.section, item.key);
+      out[fk] = out[fk] === true || v;
     }
   }
   return out;
@@ -66,7 +68,7 @@ function buildEntryFromFlat(flat: Record<string, boolean>): DayEntry {
   for (const s of SECTIONS) {
     const bucket: Record<string, boolean> = {};
     for (const item of s.items) {
-      bucket[item.key] = flat[cellKey(s.section, item.key)] === true;
+      bucket[item.key] = flat[flatKeyForCheckbox(s.section, item.key)] === true;
     }
     entry[s.section] = bucket;
   }
@@ -131,13 +133,15 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
   const checklistIds = useMemo(
     () =>
       new Set(
-        SECTIONS.flatMap((s) => s.items.map((item) => cellKey(s.section, item.key))),
+        SECTIONS.flatMap((s) =>
+          s.items.map((item) => flatKeyForCheckbox(s.section, item.key)),
+        ),
       ),
     [],
   );
 
   const setChecked = (section: string, key: string, checked: boolean) => {
-    const id = cellKey(section, key);
+    const id = flatKeyForCheckbox(section, key);
     if (!checklistIds.has(id)) return;
     setFlat((prev) => ({ ...prev, [id]: checked }));
   };
@@ -236,7 +240,8 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
               </legend>
               {fieldset.items.map((item) => {
                 const id = `${fieldset.section}-${item.key}`;
-                const checked = flat[cellKey(fieldset.section, item.key)] === true;
+                const checked =
+                  flat[flatKeyForCheckbox(fieldset.section, item.key)] === true;
                 const rule = getGrowthFieldRule(fieldset.section, item.key);
                 return (
                   <label

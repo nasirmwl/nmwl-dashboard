@@ -29,7 +29,8 @@ function entryToRow(
   for (const s of DAILY_CHECK_SECTIONS) {
     const sec = entry[s.section];
     for (const item of s.items) {
-      row[item.key] = sec?.[item.key] === true;
+      const on = sec?.[item.key] === true;
+      row[item.key] = row[item.key] === true || on;
     }
   }
   return row;
