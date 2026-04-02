@@ -1,6 +1,6 @@
 import type { DayEntry } from "./daily-checks-schema";
 
-export const SCORING_VERSION = "v3.3-weighted-strict14-utc";
+export const SCORING_VERSION = "v3.4-weighted-strict14-utc";
 export const GROWTH_STATS_WINDOW_DAYS = 14;
 
 export type FieldPolarity = "good_when_true" | "good_when_false";
@@ -111,6 +111,7 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       { section: "health", key: "stress_manageable_work", weight: 12, polarity: "good_when_true" },
       { section: "health", key: "stress_manageable_home", weight: 15, polarity: "good_when_true" },
       { section: "health", key: "ate_as_planned", weight: 8, polarity: "good_when_true" },
+      { section: "health", key: "ate_junk_food", weight: 14, polarity: "good_when_false" },
     ],
   },
   {

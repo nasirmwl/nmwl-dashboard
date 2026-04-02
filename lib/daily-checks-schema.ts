@@ -113,6 +113,7 @@ export const DAILY_CHECK_SECTIONS = [
         label: "Breathing exercises or intentional breathwork",
       },
       { key: "ate_as_planned", label: "Ate in line with what I planned" },
+      { key: "ate_junk_food", label: "Ate junk food" },
     ],
   },
   {
