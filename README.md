@@ -1,19 +1,28 @@
-# Personal Dashboard
+# Self Improvement Dashboard
 
-Private Next.js dashboard with a green CRT-style UI.
+A high-performance, minimalist command center featuring a Green CRT / Fallout-inspired UI.
+
+Key Features
+- Visual Insights: Dynamic Radar Charts for multi-dimensional progress visualization
+- Weighted Analytics: Daily checks with weighted variables for precise trend tracking and life management.
+- Note Vault: Streamlined interface for rapid note-taking and archival.
+- Cron Scheduler: Integrated reminder system for telegram.
 
 #### dashboard v1
+
 - dashboard initialized
-![](./dashboardv1.png)
+  ![](./dashboardv1.png)
 
 #### dashboard v2
+
 - ui refactor
-![](./dashboardv2.png)
+  ![](./dashboardv2.png)
 
 #### dashboard v3
+
 - 53 unique weighted questions added to have accurate percentages
 - radar charts added
-![](./dashboardv3.png)
+  ![](./dashboardv3.png)
 
 ## Run locally
 
