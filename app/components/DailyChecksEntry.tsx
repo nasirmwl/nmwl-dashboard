@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   DAILY_CHECK_SECTIONS,
   flatKeyForCheckbox,
+  readDayEntryBoolean,
   type DayEntry,
 } from "@/lib/daily-checks-schema";
 import { getGrowthFieldRule } from "@/lib/growth-stats";
@@ -38,17 +39,7 @@ function saveLog(log: Record<string, DayEntry>) {
 }
 
 function readCheckboxValue(day: DayEntry | undefined, section: string, dataKey: string): boolean {
-  if (!day) return false;
-  const sec = day[section];
-  if (sec && typeof sec[dataKey] === "boolean") return sec[dataKey];
-  if (
-    section === "finance" &&
-    day.expenditure &&
-    typeof day.expenditure[dataKey] === "boolean"
-  ) {
-    return day.expenditure[dataKey];
-  }
-  return false;
+  return readDayEntryBoolean(day, section, dataKey);
 }
 
 function flatFromDay(day: DayEntry | undefined): Record<string, boolean> {

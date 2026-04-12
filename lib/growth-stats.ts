@@ -1,6 +1,6 @@
 import type { DayEntry } from "./daily-checks-schema";
 
-export const SCORING_VERSION = "v3.5-weighted-strict14-utc";
+export const SCORING_VERSION = "v3.9-mental-health-expanded-utc";
 export const GROWTH_STATS_WINDOW_DAYS = 14;
 
 export type FieldPolarity = "good_when_true" | "good_when_false";
@@ -89,28 +89,35 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
     ],
   },
   {
-    id: "physical",
-    label: "Physical",
+    id: "mental_health",
+    label: "Mental health",
     detail:
-      "Training and movement (steps, strength, cardio, mobility), hydration, bouncing back from training strain, and how alive you feel when you use your body. Sleep and overall health have their own rows — here it's about activity and physical capacity, not your ideal gym fantasy.",
+      "Stability, stress at work and home (most of the day), coping when it spikes, worry you could manage, sustainable mood and energy, real connection and breaks, and habits that protect sleep and mood — your honest read, not a diagnosis.",
     fields: [
-      { section: "health", key: "movement_plan_done", weight: 8, polarity: "good_when_true" },
-      { section: "health", key: "breathing_today", weight: 5, polarity: "good_when_true" },
-      { section: "health", key: "symptoms_proactive", weight: 15, polarity: "good_when_true" },
-      { section: "health", key: "ate_as_planned", weight: 8, polarity: "good_when_true" },
+      { section: "mental_health", key: "mental_wellbeing_stable", weight: 8, polarity: "good_when_true" },
+      { section: "mental_health", key: "stress_manageable_work", weight: 11, polarity: "good_when_true" },
+      { section: "mental_health", key: "stress_manageable_home", weight: 14, polarity: "good_when_true" },
+      { section: "mental_health", key: "coping_when_stress_spiked", weight: 9, polarity: "good_when_true" },
+      { section: "mental_health", key: "worry_manageable_today", weight: 8, polarity: "good_when_true" },
+      { section: "mental_health", key: "mood_energy_sustainable", weight: 8, polarity: "good_when_true" },
+      { section: "mental_health", key: "supportive_connection_today", weight: 6, polarity: "good_when_true" },
+      { section: "mental_health", key: "real_break_work_screens", weight: 7, polarity: "good_when_true" },
+      { section: "mental_health", key: "sleep_habits_for_mood", weight: 7, polarity: "good_when_true" },
     ],
   },
   {
-    id: "health",
-    label: "Health",
+    id: "physical_health",
+    label: "Physical health",
     detail:
-      "Medical and dental care you actually get (checkups, screenings, chronic conditions), taking meds as prescribed, addressing symptoms instead of ignoring them, mental health (therapy, coping, stability), rest when you're sick, and how honestly \"healthy\" your body and mind feel — not a number on a scale, your lived sense of it.",
+      "Movement and training, same-day sense of physical wellness versus sickness or pain, and how you ate relative to your plan — activity and nourishment, not your ideal gym fantasy.",
     fields: [
-      { section: "health", key: "mental_wellbeing_stable", weight: 8, polarity: "good_when_true" },
-      { section: "health", key: "stress_manageable_work", weight: 12, polarity: "good_when_true" },
-      { section: "health", key: "stress_manageable_home", weight: 15, polarity: "good_when_true" },
-      { section: "health", key: "ate_as_planned", weight: 8, polarity: "good_when_true" },
-      { section: "health", key: "ate_junk_food", weight: 14, polarity: "good_when_false" },
+      { section: "physical_health", key: "movement_plan_done", weight: 8, polarity: "good_when_true" },
+      { section: "physical_health", key: "felt_physically_well_today", weight: 4, polarity: "good_when_true" },
+      { section: "physical_health", key: "sick_today", weight: 4, polarity: "good_when_false" },
+      { section: "physical_health", key: "minor_pain_today", weight: 3, polarity: "good_when_false" },
+      { section: "physical_health", key: "major_pain_today", weight: 4, polarity: "good_when_false" },
+      { section: "physical_health", key: "ate_as_planned", weight: 8, polarity: "good_when_true" },
+      { section: "physical_health", key: "ate_junk_food", weight: 14, polarity: "good_when_false" },
     ],
   },
   {

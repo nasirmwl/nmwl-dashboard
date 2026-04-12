@@ -81,32 +81,72 @@ export const DAILY_CHECK_SECTIONS = [
     ],
   },
   {
-    legend: "Health",
-    section: "health",
+    legend: "Mental health",
+    section: "mental_health",
+    items: [
+      {
+        key: "mental_wellbeing_stable",
+        label: "My mental well-being felt stable today",
+      },
+      {
+        key: "stress_manageable_work",
+        label: "Stress at work stayed manageable for most of the day",
+      },
+      {
+        key: "stress_manageable_home",
+        label: "Stress at home stayed manageable for most of the day",
+      },
+      {
+        key: "coping_when_stress_spiked",
+        label:
+          "I used a deliberate coping strategy when stress spiked (breath, walk, boundary, or similar)",
+      },
+      {
+        key: "worry_manageable_today",
+        label: "Rumination or worry stayed within what I could manage today",
+      },
+      {
+        key: "mood_energy_sustainable",
+        label: "My mood or energy felt sustainable for what I had to do today",
+      },
+      {
+        key: "supportive_connection_today",
+        label: "I had at least one interaction that felt supportive or genuinely connecting",
+      },
+      {
+        key: "real_break_work_screens",
+        label: "I took a real break from work or screens (not just switching tasks)",
+      },
+      {
+        key: "sleep_habits_for_mood",
+        label:
+          "I protected sleep-related habits that affect mood (caffeine, late scrolling, or similar)",
+      },
+    ],
+  },
+  {
+    legend: "Physical health",
+    section: "physical_health",
     items: [
       {
         key: "movement_plan_done",
         label: "Completed planned movement or training for the day",
       },
       {
-        key: "mental_wellbeing_stable",
-        label: "Mental well-being felt stable today",
+        key: "felt_physically_well_today",
+        label: "I felt physically well overall today",
       },
       {
-        key: "stress_manageable_work",
-        label: "Stress remained manageable at work",
+        key: "sick_today",
+        label: "I was sick or noticeably unwell today",
       },
       {
-        key: "stress_manageable_home",
-        label: "Stress remained manageable at home",
+        key: "minor_pain_today",
+        label: "I experienced minor pain or discomfort today",
       },
       {
-        key: "symptoms_proactive",
-        label: "Minor symptoms or discomfort addressed proactively",
-      },
-      {
-        key: "breathing_today",
-        label: "Breathing exercises or intentional breathwork",
+        key: "major_pain_today",
+        label: "I experienced significant or severe pain today",
       },
       { key: "ate_as_planned", label: "Ate in line with what I planned" },
       { key: "ate_junk_food", label: "Ate junk food" },
@@ -239,8 +279,37 @@ export function countCheckedInEntry(entry: DayEntry): number {
     for (const item of s.items) {
       if (seenKeys.has(item.key)) continue;
       seenKeys.add(item.key);
-      if (entry[s.section]?.[item.key] === true) c++;
+      if (readDayEntryBoolean(entry, s.section, item.key)) c++;
     }
   }
   return c;
+}
+
+/** Read a checklist boolean; supports legacy `health` bucket from before mental/physical split. */
+export function readDayEntryBoolean(
+  day: DayEntry | undefined,
+  section: string,
+  dataKey: string,
+): boolean {
+  if (!day) return false;
+  const sec = day[section];
+  if (sec && typeof sec[dataKey] === "boolean") return sec[dataKey];
+  if (
+    section === "finance" &&
+    day.expenditure &&
+    typeof day.expenditure[dataKey] === "boolean"
+  ) {
+    return day.expenditure[dataKey];
+  }
+  const legacyHealth = day["health"];
+  if (
+    legacyHealth &&
+    typeof legacyHealth === "object" &&
+    !Array.isArray(legacyHealth) &&
+    typeof legacyHealth[dataKey] === "boolean" &&
+    (section === "mental_health" || section === "physical_health")
+  ) {
+    return legacyHealth[dataKey];
+  }
+  return false;
 }

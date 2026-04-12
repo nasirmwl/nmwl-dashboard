@@ -5,7 +5,11 @@ import { format, parseISO } from "date-fns";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { DAILY_CHECK_SECTIONS, type DayEntry } from "@/lib/daily-checks-schema";
+import {
+  DAILY_CHECK_SECTIONS,
+  readDayEntryBoolean,
+  type DayEntry,
+} from "@/lib/daily-checks-schema";
 import { getGrowthFieldRule } from "@/lib/growth-stats";
 
 type ListItem = {
@@ -110,7 +114,7 @@ export default function DailyChecksEntriesList() {
                   </h3>
                   <ul className="space-y-1.5 list-none m-0 p-0">
                     {fieldset.items.map((item) => {
-                      const on = row.entry[fieldset.section]?.[item.key] === true;
+                      const on = readDayEntryBoolean(row.entry, fieldset.section, item.key);
                       const rule = getGrowthFieldRule(fieldset.section, item.key);
                       return (
                         <li
