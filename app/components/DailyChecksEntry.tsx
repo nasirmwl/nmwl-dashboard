@@ -9,11 +9,22 @@ import {
   readDayEntryBoolean,
   type DayEntry,
 } from "@/lib/daily-checks-schema";
+import {
+  DAY_TEMPLATE_BUTTON_LABEL,
+  flatFromDayTemplateKind,
+  type DayTemplateKind,
+} from "@/lib/daily-check-templates";
 import { getGrowthFieldRule } from "@/lib/growth-stats";
 
 const STORAGE_KEY = "nmwl-daily-checks";
 
 const SECTIONS = DAILY_CHECK_SECTIONS;
+
+const DAY_TEMPLATE_KINDS = [
+  "productive",
+  "unproductive",
+  "rest",
+] as const satisfies readonly DayTemplateKind[];
 
 function todayLocalISO(): string {
   const d = new Date();
@@ -137,6 +148,11 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
     setFlat((prev) => ({ ...prev, [id]: checked }));
   };
 
+  const applyDayTemplate = (kind: DayTemplateKind) => {
+    setFlat(flatFromDayTemplateKind(kind));
+    setStatus(`${DAY_TEMPLATE_BUTTON_LABEL[kind]} template applied — review and save.`);
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!dateStr) {
@@ -219,6 +235,28 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
                 className="mt-1.5 block w-full max-w-xs px-3 py-2 crt-input rounded-sm text-sm disabled:opacity-50"
               />
             </label>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-crt-muted uppercase tracking-wider crt-text-plain">
+              Quick fill
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {DAY_TEMPLATE_KINDS.map((kind) => (
+                <button
+                  key={kind}
+                  type="button"
+                  disabled={formBusy}
+                  onClick={() => applyDayTemplate(kind)}
+                  className="px-3 py-2.5 md:py-2 rounded-sm border border-crt-border bg-crt-bar-track/60 text-sm font-medium text-crt-phosphor-bright crt-text-plain transition-colors hover:border-crt-phosphor-dim hover:bg-crt-bg/50 min-h-[44px] md:min-h-0 disabled:opacity-50"
+                >
+                  {DAY_TEMPLATE_BUTTON_LABEL[kind]}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-crt-muted crt-text-plain leading-snug">
+              Fills every checkbox from that day template. You can still edit before saving.
+            </p>
           </div>
 
           {SECTIONS.map((fieldset) => (
