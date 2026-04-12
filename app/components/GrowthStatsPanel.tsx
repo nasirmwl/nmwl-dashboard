@@ -19,7 +19,7 @@ function StatBar({
 }) {
   const clamped = Math.min(100, Math.max(0, value));
   return (
-    <div className="group/me-tip relative cursor-default hover:z-30">
+    <div className="group/me-tip relative min-w-0 cursor-default hover:z-30">
       <div className="me-stat-row crt-text-plain">
         <span
           className="me-stat-label justify-self-start text-left normal-case tracking-normal"
