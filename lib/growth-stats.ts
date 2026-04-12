@@ -1,6 +1,6 @@
 import type { DayEntry } from "./daily-checks-schema";
 
-export const SCORING_VERSION = "v3.4-weighted-strict14-utc";
+export const SCORING_VERSION = "v3.5-weighted-strict14-utc";
 export const GROWTH_STATS_WINDOW_DAYS = 14;
 
 export type FieldPolarity = "good_when_true" | "good_when_false";
@@ -37,7 +37,6 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
         weight: 10,
         polarity: "good_when_true",
       },
-      { section: "discipline", key: "doing_unplanned_work", weight: 7, polarity: "good_when_true" },
       {
         section: "discipline",
         key: "declined_misaligned_invitation",

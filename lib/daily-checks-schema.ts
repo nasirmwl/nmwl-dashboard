@@ -17,10 +17,6 @@ export const DAILY_CHECK_SECTIONS = [
         label: "Daily report completed at its scheduled time",
       },
       {
-        key: "doing_unplanned_work",
-        label: "Addressed unplanned or ad hoc work as required",
-      },
-      {
         key: "declined_misaligned_invitation",
         label:
           "Declined an invitation or request that didn't align with my priorities",
