@@ -1,6 +1,6 @@
 import type { DayEntry } from "./daily-checks-schema";
 
-export const SCORING_VERSION = "v3.9-mental-health-expanded-utc";
+export const SCORING_VERSION = "v4.0-growth-ai-ielts-weights-utc";
 export const GROWTH_STATS_WINDOW_DAYS = 14;
 
 export type FieldPolarity = "good_when_true" | "good_when_false";
@@ -72,8 +72,8 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       { section: "growth", key: "applied", weight: 9, polarity: "good_when_true" },
       { section: "growth", key: "reflection", weight: 7, polarity: "good_when_true" },
       { section: "growth", key: "fe_one_hour", weight: 10, polarity: "good_when_true" },
-      { section: "growth", key: "ai_one_hour", weight: 10, polarity: "good_when_true" },
-      { section: "growth", key: "ielts_one_hour", weight: 9, polarity: "good_when_true" },
+      { section: "growth", key: "ai_one_hour", weight: 25, polarity: "good_when_true" },
+      { section: "growth", key: "ielts_one_hour", weight: 18, polarity: "good_when_true" },
       {
         section: "growth",
         key: "pure_curiosity_ten_min",

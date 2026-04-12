@@ -7,11 +7,7 @@ import {
   getLastNDatesUtcEndingToday,
   normalizeEntryDate,
 } from "@/lib/date-window";
-import {
-  GROWTH_STATS_WINDOW_DAYS,
-  growthStatsFromRowDays,
-  SCORING_VERSION,
-} from "@/lib/growth-stats";
+import { GROWTH_STATS_WINDOW_DAYS, growthStatsFromRowDays } from "@/lib/growth-stats";
 
 const supabaseUrl = "https://zgkrelbxmwsidhbsoowb.supabase.co";
 const supabaseKey = "sb_publishable_xzfyp23xWPwl4CKT0v4F8w_nL20TZcv";
@@ -59,13 +55,23 @@ export async function GET() {
 
     const stats = growthStatsFromRowDays(rowDays, calendarDates);
 
+    const todayUtc = calendarDates[calendarDates.length - 1];
+    const todayRow = rowDays.find((r) => r.entryDate === todayUtc);
+    const dailyRowDays = todayRow
+      ? [{ entryDate: todayRow.entryDate, entry: todayRow.entry }]
+      : [];
+    const dailyStats = growthStatsFromRowDays(dailyRowDays, [todayUtc]);
+    const dailyLogged = loggedDates.has(todayUtc);
+
     return NextResponse.json({
-      scoringVersion: SCORING_VERSION,
       windowStart,
       windowEnd,
       windowDays: calendarDates.length,
       loggedDaysInWindow: loggedDates.size,
       stats,
+      dailyStats,
+      dailyDate: todayUtc,
+      dailyLogged,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";

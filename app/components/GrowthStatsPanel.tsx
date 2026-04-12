@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import type { GrowthStatRow } from "@/lib/growth-stats";
 
+import GrowthStatsRadar from "./GrowthStatsRadar";
+
 function StatBar({
   name,
   detail,
@@ -53,8 +55,10 @@ function StatBar({
 
 type StatsPayload = {
   stats?: GrowthStatRow[];
+  dailyStats?: GrowthStatRow[];
+  dailyDate?: string;
+  dailyLogged?: boolean;
   error?: string;
-  scoringVersion?: string;
   windowDays?: number;
   loggedDaysInWindow?: number;
   windowStart?: string;
@@ -63,8 +67,12 @@ type StatsPayload = {
 
 export default function GrowthStatsPanel() {
   const [stats, setStats] = useState<GrowthStatRow[] | null>(null);
+  const [dailyStats, setDailyStats] = useState<GrowthStatRow[] | null>(null);
+  const [dailyMeta, setDailyMeta] = useState<{
+    date: string;
+    logged: boolean;
+  } | null>(null);
   const [meta, setMeta] = useState<{
-    scoringVersion: string;
     windowDays: number;
     loggedDaysInWindow: number;
   } | null>(null);
@@ -81,9 +89,12 @@ export default function GrowthStatsPanel() {
         }
         if (!cancelled) {
           setStats(Array.isArray(body.stats) ? body.stats : []);
+          setDailyStats(Array.isArray(body.dailyStats) ? body.dailyStats : []);
+          setDailyMeta({
+            date: typeof body.dailyDate === "string" ? body.dailyDate : "",
+            logged: body.dailyLogged === true,
+          });
           setMeta({
-            scoringVersion:
-              typeof body.scoringVersion === "string" ? body.scoringVersion : "—",
             windowDays: typeof body.windowDays === "number" ? body.windowDays : 14,
             loggedDaysInWindow:
               typeof body.loggedDaysInWindow === "number"
@@ -108,7 +119,7 @@ export default function GrowthStatsPanel() {
     );
   }
 
-  if (stats === null || meta === null) {
+  if (stats === null || dailyStats === null || dailyMeta === null || meta === null) {
     return (
       <div className="crt-panel overflow-hidden rounded-sm" aria-busy="true">
         <div className="h-36 w-full overflow-hidden sm:h-40">
@@ -140,9 +151,27 @@ export default function GrowthStatsPanel() {
         />
       </div>
       <p className="border-b border-crt-border px-4 py-2 text-[11px] leading-snug text-crt-muted sm:px-6 crt-text-plain">
-        Last {meta.windowDays} days (UTC) · {meta.loggedDaysInWindow} logged ·{" "}
-        {meta.scoringVersion}
+        Last {meta.windowDays} days · {meta.loggedDaysInWindow} logged
       </p>
+      <div className="grid grid-cols-1 border-b border-crt-border sm:grid-cols-2">
+        <div className="border-b border-crt-border sm:border-b-0 sm:border-r border-crt-border">
+          <GrowthStatsRadar
+            stats={dailyStats}
+            title="Today"
+            variant="today"
+            caption={
+              dailyMeta.logged
+                ? null
+                : `No log for ${dailyMeta.date || "today"} — scores are 0`
+            }
+          />
+        </div>
+        <GrowthStatsRadar
+          stats={stats}
+          title={`${meta.windowDays}-day window`}
+          variant="window"
+        />
+      </div>
       <div className="flex min-w-0 flex-col gap-3 p-4 sm:p-6">
         {stats.map((s) => (
           <StatBar
