@@ -3,15 +3,16 @@
 Private Next.js dashboard with a green CRT-style UI.
 
 #### dashboard v1
-
+- dashboard initialized
 ![](./dashboardv1.png)
 
 #### dashboard v2
-
+- ui refactor
 ![](./dashboardv2.png)
 
 #### dashboard v3
-
+- 53 unique weighted questions added to have accurate percentages
+- radar charts added
 ![](./dashboardv3.png)
 
 ## Run locally
