@@ -3,6 +3,9 @@ import type { DayEntry } from "./daily-checks-schema";
 export const SCORING_VERSION = "v4.0-growth-ai-ielts-weights-utc";
 export const GROWTH_STATS_WINDOW_DAYS = 14;
 
+/** UTC days shown in the productivity heatmap (independent of category window). */
+export const PRODUCTIVITY_CHART_WINDOW_DAYS = 180;
+
 export type FieldPolarity = "good_when_true" | "good_when_false";
 
 export type GrowthStatField = {
@@ -242,6 +245,11 @@ function blockMaxWeightPerDay(block: GrowthStatBlock): number {
   return block.fields.reduce((s, f) => s + f.weight, 0);
 }
 
+/** Sum of all weighted checklist cells for one calendar day (same rules as category rows). */
+export function totalGrowthMaxWeightPerDay(): number {
+  return GROWTH_STAT_BLOCKS.reduce((s, b) => s + blockMaxWeightPerDay(b), 0);
+}
+
 function fieldContribution(entry: DayEntry | undefined, f: GrowthStatField): number {
   if (!entry) return 0;
   const checked = entry[f.section]?.[f.key] === true;
@@ -261,6 +269,45 @@ export type GrowthStatRow = {
  * Weighted % per block: round(100 × earned / max), max = (sum of weights in block) × number of calendar days in window.
  * Missing days earn 0 on all items (strict calendar denominator).
  */
+/** Single-day weighted % over all growth-stat fields (0 if no entry). */
+export function productivityPercentForDayEntry(entry: DayEntry | undefined): number {
+  const maxW = totalGrowthMaxWeightPerDay();
+  if (maxW <= 0) return 0;
+  let earned = 0;
+  for (const block of GROWTH_STAT_BLOCKS) {
+    for (const f of block.fields) {
+      earned += fieldContribution(entry, f);
+    }
+  }
+  return Math.min(100, Math.max(0, Math.round((100 * earned) / maxW)));
+}
+
+export type DailyProductivityPoint = {
+  date: string;
+  /** 0–100; 0 when not logged. */
+  score: number;
+  logged: boolean;
+};
+
+/** One point per calendar day in order (oldest → newest in `calendarDates`). */
+export function productivitySeriesFromRowDays(
+  rowDays: { entryDate: string; entry: DayEntry }[],
+  calendarDates: string[],
+): DailyProductivityPoint[] {
+  const byDate = new Map<string, DayEntry>();
+  for (const r of rowDays) {
+    byDate.set(r.entryDate.slice(0, 10), r.entry);
+  }
+  return calendarDates.map((date) => {
+    const entry = byDate.get(date);
+    return {
+      date,
+      score: productivityPercentForDayEntry(entry),
+      logged: entry !== undefined,
+    };
+  });
+}
+
 export function growthStatsFromRowDays(
   rowDays: { entryDate: string; entry: DayEntry }[],
   calendarDates: string[],

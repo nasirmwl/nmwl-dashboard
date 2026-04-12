@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import type { GrowthStatRow } from "@/lib/growth-stats";
+import { PRODUCTIVITY_CHART_WINDOW_DAYS, type GrowthStatRow } from "@/lib/growth-stats";
 
 import GrowthStatsRadar from "./GrowthStatsRadar";
 
@@ -53,6 +53,12 @@ function StatBar({
   );
 }
 
+type DailyProductivityPoint = {
+  date: string;
+  score: number;
+  logged: boolean;
+};
+
 type StatsPayload = {
   stats?: GrowthStatRow[];
   dailyStats?: GrowthStatRow[];
@@ -63,7 +69,157 @@ type StatsPayload = {
   loggedDaysInWindow?: number;
   windowStart?: string;
   windowEnd?: string;
+  productivityWindowDays?: number;
+  dailyProductivity?: DailyProductivityPoint[];
 };
+
+function parseIsoDateUtc(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1));
+}
+
+/** Square fill from daily score (warmer = lower, greener = higher). */
+function productivityHeatFill(score: number, logged: boolean): string {
+  if (!logged) {
+    return "color-mix(in srgb, var(--crt-muted) 22%, var(--crt-bar-track))";
+  }
+  const s = Math.min(100, Math.max(0, score));
+  const h = 12 + (s / 100) * 108;
+  const L = 34 + (s / 100) * 26;
+  return `hsl(${h} 58% ${L}%)`;
+}
+
+/** Pad to full weeks (Sun→Sat columns), GitHub-style. */
+function productivityHeatmapCells(
+  days: DailyProductivityPoint[],
+): (DailyProductivityPoint | null)[] {
+  if (days.length === 0) return [];
+  const first = parseIsoDateUtc(days[0].date);
+  const paddingBefore = first.getUTCDay();
+  const n = days.length;
+  const paddingAfter = (7 - ((paddingBefore + n) % 7)) % 7;
+  return [
+    ...Array<DailyProductivityPoint | null>(paddingBefore).fill(null),
+    ...days,
+    ...Array<DailyProductivityPoint | null>(paddingAfter).fill(null),
+  ];
+}
+
+const HEATMAP_DOW_LABELS = ["S", "M", "T", "W", "T", "F", "S"] as const;
+
+function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) {
+  const from = days[0]?.date ?? "";
+  const to = days[days.length - 1]?.date ?? "";
+
+  const cells = useMemo(() => productivityHeatmapCells(days), [days]);
+  const weeks = useMemo(() => {
+    if (cells.length === 0) return [];
+    const colCount = cells.length / 7;
+    return Array.from({ length: colCount }, (_, w) => cells.slice(w * 7, w * 7 + 7));
+  }, [cells]);
+
+  const gapCls = "gap-[3px] sm:gap-1";
+
+  return (
+    <div className="border-t border-crt-border py-4 sm:py-5">
+      <div className="mb-3 px-4 sm:px-6 crt-text-plain">
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-crt-muted">
+          {PRODUCTIVITY_CHART_WINDOW_DAYS}-day checklist heatmap 
+        </h3>
+      </div>
+      <div className="w-full min-w-0 px-4 sm:px-6">
+        <div className="flex w-full items-stretch gap-2 sm:gap-3">
+          <div
+            className={`flex w-7 shrink-0 flex-col self-stretch min-h-0 sm:w-8 ${gapCls}`}
+            aria-hidden
+          >
+            {HEATMAP_DOW_LABELS.map((label, row) => (
+              <div
+                key={`dow-${row}`}
+                className="flex min-h-0 flex-1 items-center justify-end text-[8px] leading-none text-crt-muted"
+              >
+                {row % 2 === 1 ? label : "\u00a0"}
+              </div>
+            ))}
+          </div>
+          <div
+            className={`flex min-w-0 flex-1 items-stretch ${gapCls}`}
+            role="img"
+            aria-label={`Productivity heatmap from ${from} to ${to}, Sunday top to Saturday bottom, older weeks left.`}
+          >
+            {weeks.map((week, wi) => (
+              <div
+                key={`week-${wi}`}
+                className={`flex min-w-0 flex-1 flex-col ${gapCls}`}
+              >
+                {week.map((cell, ri) => {
+                  const key = cell ? cell.date : `empty-${wi}-${ri}`;
+                  const fill = cell
+                    ? productivityHeatFill(cell.score, cell.logged)
+                    : "var(--crt-bar-track)";
+                  const tooltipMain = !cell
+                    ? "Outside range"
+                    : cell.logged
+                      ? `Score: ${cell.score}`
+                      : "No log · 0";
+                  const tooltipDate = cell?.date ?? "";
+                  return (
+                    <div
+                      key={key}
+                      className="group/heat-cell relative aspect-square w-full min-h-0 cursor-default hover:z-20"
+                    >
+                      <div
+                        className="aspect-square w-full min-h-0 rounded-[3px] border border-crt-border/50"
+                        style={{
+                          backgroundColor: fill,
+                          boxShadow:
+                            cell && cell.logged
+                              ? "inset 0 1px 0 rgba(255,255,255,0.08)"
+                              : undefined,
+                        }}
+                      />
+                      <span
+                        role="tooltip"
+                        className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 w-max max-w-[min(14rem,calc(100vw-2rem))] -translate-x-1/2 space-y-0.5 rounded-sm border border-crt-border bg-crt-panel px-2 py-1.5 text-left text-[10px] font-semibold normal-case tracking-wide text-crt-phosphor-bright opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.45)] transition-opacity duration-100 group-hover/heat-cell:opacity-100 crt-text-plain"
+                      >
+                        {tooltipDate ? (
+                          <>
+                            <span className="block tabular-nums">{tooltipDate}</span>
+                            <span className="block font-normal leading-snug text-crt-muted">
+                              {tooltipMain}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="block font-normal text-crt-muted">{tooltipMain}</span>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mt-3 flex w-full flex-wrap items-center justify-end gap-2 text-[9px] text-crt-muted crt-text-plain">
+          <span>Less</span>
+          <div className={`flex items-center ${gapCls}`}>
+            {[0, 25, 50, 75, 100].map((level) => (
+              <div
+                key={level}
+                className="aspect-square w-3 min-w-3 rounded-[2px] border border-crt-border/50 sm:w-3.5 sm:min-w-3.5"
+                style={{
+                  backgroundColor: productivityHeatFill(level, true),
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
+                }}
+              />
+            ))}
+          </div>
+          <span>More</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function GrowthStatsPanel() {
   const [stats, setStats] = useState<GrowthStatRow[] | null>(null);
@@ -76,6 +232,9 @@ export default function GrowthStatsPanel() {
     windowDays: number;
     loggedDaysInWindow: number;
   } | null>(null);
+  const [dailyProductivity, setDailyProductivity] = useState<
+    DailyProductivityPoint[] | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -101,6 +260,9 @@ export default function GrowthStatsPanel() {
                 ? body.loggedDaysInWindow
                 : 0,
           });
+          setDailyProductivity(
+            Array.isArray(body.dailyProductivity) ? body.dailyProductivity : [],
+          );
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
@@ -119,7 +281,13 @@ export default function GrowthStatsPanel() {
     );
   }
 
-  if (stats === null || dailyStats === null || dailyMeta === null || meta === null) {
+  if (
+    stats === null ||
+    dailyStats === null ||
+    dailyMeta === null ||
+    meta === null ||
+    dailyProductivity === null
+  ) {
     return (
       <div className="crt-panel overflow-hidden rounded-sm" aria-busy="true">
         <div className="h-36 w-full overflow-hidden sm:h-40">
@@ -172,6 +340,7 @@ export default function GrowthStatsPanel() {
           variant="window"
         />
       </div>
+      <ProductivityDailySection days={dailyProductivity} />
       <div className="flex min-w-0 flex-col gap-3 p-4 sm:p-6">
         {stats.map((s) => (
           <StatBar

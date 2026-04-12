@@ -7,7 +7,12 @@ import {
   getLastNDatesUtcEndingToday,
   normalizeEntryDate,
 } from "@/lib/date-window";
-import { GROWTH_STATS_WINDOW_DAYS, growthStatsFromRowDays } from "@/lib/growth-stats";
+import {
+  GROWTH_STATS_WINDOW_DAYS,
+  growthStatsFromRowDays,
+  PRODUCTIVITY_CHART_WINDOW_DAYS,
+  productivitySeriesFromRowDays,
+} from "@/lib/growth-stats";
 
 const supabaseUrl = "https://zgkrelbxmwsidhbsoowb.supabase.co";
 const supabaseKey = "sb_publishable_xzfyp23xWPwl4CKT0v4F8w_nL20TZcv";
@@ -22,9 +27,11 @@ const TABLE = "daily_checks";
 export async function GET() {
   try {
     const calendarDates = getLastNDatesUtcEndingToday(GROWTH_STATS_WINDOW_DAYS);
-    const windowStart = calendarDates[0];
-    const windowEnd = calendarDates[calendarDates.length - 1];
-    const dateSet = new Set(calendarDates);
+    const productivityDates = getLastNDatesUtcEndingToday(PRODUCTIVITY_CHART_WINDOW_DAYS);
+    const windowStart = productivityDates[0];
+    const windowEnd = productivityDates[productivityDates.length - 1];
+    const dateSet30 = new Set(productivityDates);
+    const dateSet14 = new Set(calendarDates);
 
     const { data, error } = await supabase
       .from(TABLE)
@@ -45,15 +52,18 @@ export async function GET() {
       const r = row as Record<string, unknown>;
       const rawDate = String(r.entry_date ?? "");
       const entryDate = normalizeEntryDate(rawDate);
-      if (!dateSet.has(entryDate)) continue;
+      if (!dateSet30.has(entryDate)) continue;
       rowDays.push({
         entryDate,
         entry: dailyCheckRowToEntry(r),
       });
-      loggedDates.add(entryDate);
+      if (dateSet14.has(entryDate)) {
+        loggedDates.add(entryDate);
+      }
     }
 
     const stats = growthStatsFromRowDays(rowDays, calendarDates);
+    const dailyProductivity = productivitySeriesFromRowDays(rowDays, productivityDates);
 
     const todayUtc = calendarDates[calendarDates.length - 1];
     const todayRow = rowDays.find((r) => r.entryDate === todayUtc);
@@ -64,14 +74,16 @@ export async function GET() {
     const dailyLogged = loggedDates.has(todayUtc);
 
     return NextResponse.json({
-      windowStart,
-      windowEnd,
+      windowStart: calendarDates[0],
+      windowEnd: calendarDates[calendarDates.length - 1],
       windowDays: calendarDates.length,
       loggedDaysInWindow: loggedDates.size,
+      productivityWindowDays: productivityDates.length,
       stats,
       dailyStats,
       dailyDate: todayUtc,
       dailyLogged,
+      dailyProductivity,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
