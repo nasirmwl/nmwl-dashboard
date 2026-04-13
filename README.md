@@ -32,3 +32,26 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Copy `.env.example` to `.env` and set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+## Full DB backup (local)
+
+Requires `pg_dump` (PostgreSQL client tools, e.g. Homebrew `libpq`).
+
+**Easiest:** keep `NEXT_PUBLIC_SUPABASE_DATABASE_PASSWORD` in `.env` and run `supabase link` so `~/supabase/.temp/pooler-url` exists. The backup script merges that URL (correct pooler host, often `aws-1-…`) with your password.
+
+```bash
+npm run backup:db
+```
+
+Or set `SUPABASE_DB_URL` explicitly (URI from Supabase Dashboard → Database).
+
+Outputs in `backups/`:
+
+- `supabase_full_YYYYMMDD_HHMMSS.dump` (custom format, schema + data)
+- `supabase_full_YYYYMMDD_HHMMSS.meta.txt`
+
+Restore example:
+
+```bash
+TARGET_DB_URL="postgresql://..." pg_restore --clean --if-exists --no-owner --no-privileges --dbname="$TARGET_DB_URL" backups/supabase_full_YYYYMMDD_HHMMSS.dump
+```

@@ -34,6 +34,10 @@ yarn-error.log*
 .env*
 # exclude .env.example
 !.env.example
+backups/*.sql
+backups/*.dump
+backups/*.gz
+!backups/.gitkeep
 
 
 # vercel
