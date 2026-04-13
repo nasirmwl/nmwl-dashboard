@@ -33,7 +33,7 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       { section: "discipline", key: "planned_done", weight: 15, polarity: "good_when_true" },
       { section: "discipline", key: "meetings_friday_only", weight: 3, polarity: "good_when_true" },
       { section: "discipline", key: "wake_dedicated_time", weight: 10, polarity: "good_when_true" },
-      { section: "discipline", key: "no_late_to_work", weight: 12, polarity: "good_when_true" },
+      { section: "discipline", key: "no_late_to_work", weight: 25, polarity: "good_when_true" },
       {
         section: "discipline",
         key: "daily_report_dedicated_time",
@@ -49,7 +49,7 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       {
         section: "discipline",
         key: "screen_zen_social_limits",
-        weight: 8,
+        weight: 25,
         polarity: "good_when_true",
       },
       { section: "discipline", key: "ate_as_planned", weight: 8, polarity: "good_when_true" },
@@ -59,7 +59,7 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       {
         section: "discipline",
         key: "acted_despite_low_motivation",
-        weight: 20,
+        weight: 5,
         polarity: "good_when_true",
       },
     ],
@@ -81,12 +81,6 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
         section: "growth",
         key: "pure_curiosity_ten_min",
         weight: 4,
-        polarity: "good_when_true",
-      },
-      {
-        section: "growth",
-        key: "acted_despite_low_motivation",
-        weight: 20,
         polarity: "good_when_true",
       },
     ],
@@ -167,7 +161,7 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
       {
         section: "focus",
         key: "screen_zen_social_limits",
-        weight: 8,
+        weight: 25,
         polarity: "good_when_true",
       },
     ],

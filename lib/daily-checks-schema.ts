@@ -77,7 +77,6 @@ export const DAILY_CHECK_SECTIONS = [
         label:
           "Engaged in 10 minutes of 'pure' curiosity (reading/watching something unrelated to work or goals).",
       },
-      { key: "acted_despite_low_motivation", label: "Acted despite low motivation" },
     ],
   },
   {
