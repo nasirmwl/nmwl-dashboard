@@ -26,6 +26,10 @@ export const DAILY_CHECK_SECTIONS = [
         label:
           "Did I stay within my social media limits based on Screen Zen?",
       },
+      {
+        key: "had_breakfast_before_commuting",
+        label: "Had breakfast before commuting to work",
+      },
       { key: "ate_as_planned", label: "Ate in line with what I planned" },
       {
         key: "workspace_clean_eod",
@@ -146,6 +150,10 @@ export const DAILY_CHECK_SECTIONS = [
       {
         key: "major_pain_today",
         label: "I experienced significant or severe pain today",
+      },
+      {
+        key: "had_breakfast_before_commuting",
+        label: "Had breakfast before commuting to work",
       },
       { key: "ate_as_planned", label: "Ate in line with what I planned" },
       { key: "ate_junk_food", label: "Ate junk food" },
