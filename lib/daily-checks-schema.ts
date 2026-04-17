@@ -207,7 +207,6 @@ export const DAILY_CHECK_SECTIONS = [
         label: "Meaningful live contact with someone important",
       },
       { key: "showed_up", label: "Fulfilled a commitment to someone" },
-      { key: "honesty_repair", label: "Honesty or repair where it mattered" },
       {
         key: "boundaries",
         label: "Time and emotional boundaries respected (mine or theirs)",
@@ -241,6 +240,14 @@ export const DAILY_CHECK_SECTIONS = [
       {
         key: "added_value_no_return",
         label: "Added value to someone without expecting return",
+      },
+      {
+        key: "communicated_friend",
+        label: "Did I communicate or meet with any friend",
+      },
+      {
+        key: "family_one_hour",
+        label: "Did I communicate or spend at least 1 hour with family",
       },
     ],
   },

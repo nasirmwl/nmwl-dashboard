@@ -10,6 +10,7 @@ import {
 import {
   GROWTH_STATS_WINDOW_DAYS,
   growthStatsFromRowDays,
+  fieldStatsFromRowDays,
   PRODUCTIVITY_CHART_WINDOW_DAYS,
   productivitySeriesFromRowDays,
 } from "@/lib/growth-stats";
@@ -64,6 +65,7 @@ export async function GET() {
 
     const stats = growthStatsFromRowDays(rowDays, calendarDates);
     const dailyProductivity = productivitySeriesFromRowDays(rowDays, productivityDates);
+    const topFrictionPoints = fieldStatsFromRowDays(rowDays, calendarDates).filter(f => f.pointsLost > 0).slice(0, 5);
 
     const todayUtc = calendarDates[calendarDates.length - 1];
     const todayRow = rowDays.find((r) => r.entryDate === todayUtc);
@@ -81,6 +83,7 @@ export async function GET() {
       productivityWindowDays: productivityDates.length,
       stats,
       dailyStats,
+      topFrictionPoints,
       dailyDate: todayUtc,
       dailyLogged,
       dailyProductivity,

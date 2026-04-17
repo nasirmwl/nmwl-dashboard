@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { PRODUCTIVITY_CHART_WINDOW_DAYS, type GrowthStatRow } from "@/lib/growth-stats";
+import { 
+  PRODUCTIVITY_CHART_WINDOW_DAYS, 
+  type GrowthStatRow, 
+  type FieldStat 
+} from "@/lib/growth-stats";
 
 import GrowthStatsRadar from "./GrowthStatsRadar";
 
@@ -11,44 +15,86 @@ function StatBar({
   detail,
   value,
   maxWeightPerDay,
+  fields = [],
 }: {
   name: string;
   detail: string;
   value: number;
   maxWeightPerDay: number;
+  fields?: FieldStat[];
 }) {
+  const [expanded, setExpanded] = useState(false);
   const clamped = Math.min(100, Math.max(0, value));
+
   return (
-    <div className="group/me-tip relative min-w-0 cursor-default hover:z-30">
-      <div className="me-stat-row crt-text-plain">
-        <span
-          className="me-stat-label justify-self-start text-left normal-case tracking-normal"
-          title={name}
-        >
-          {name}
-        </span>
-        <div
-          className="me-stat-track"
-          role="progressbar"
-          aria-valuenow={clamped}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`${name}: ${clamped} percent`}
-        >
-          <div className="me-stat-fill" style={{ width: `${clamped}%` }} />
-        </div>
-        <span className="me-stat-value">{clamped}</span>
-      </div>
-      <span
-        role="tooltip"
-        className="pointer-events-none absolute left-0 top-full z-50 mt-1 w-max max-w-[min(18rem,calc(100vw-2rem))] space-y-1.5 rounded-sm border border-crt-border bg-crt-panel px-2.5 py-2 text-left text-[10px] font-semibold normal-case tracking-wide text-crt-phosphor-bright opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.45)] transition-opacity duration-100 group-hover/me-tip:opacity-100 crt-text-plain"
+    <div className="flex flex-col">
+      <div 
+        className="group/me-tip relative min-w-0 cursor-pointer hover:z-30"
+        onClick={() => setExpanded(!expanded)}
       >
-        <span className="block">{name}</span>
-        <span className="block font-normal leading-snug text-crt-muted">{detail}</span>
-        <span className="block border-t border-crt-border pt-1.5 font-normal text-crt-muted">
-          Σ weight/day: {maxWeightPerDay} (14-day % uses this × 14)
-        </span>
-      </span>
+        <div className="me-stat-row crt-text-plain hover:bg-crt-phosphor/5 transition-colors rounded-sm px-1 -mx-1">
+          <span
+            className="me-stat-label justify-self-start text-left normal-case tracking-normal flex items-center gap-1.5"
+            title={name}
+          >
+            <span className={`text-[8px] transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}>
+              ▶
+            </span>
+            {name}
+          </span>
+          <div
+            className="me-stat-track"
+            role="progressbar"
+            aria-valuenow={clamped}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`${name}: ${clamped} percent`}
+          >
+            <div className="me-stat-fill" style={{ width: `${clamped}%` }} />
+          </div>
+          <span className="me-stat-value">{clamped}</span>
+        </div>
+        
+        {/* Tooltip (only when not expanded to avoid clutter) */}
+        {!expanded && (
+          <span
+            role="tooltip"
+            className="pointer-events-none absolute left-0 top-full z-50 mt-1 w-max max-w-[min(18rem,calc(100vw-2rem))] space-y-1.5 rounded-sm border border-crt-border bg-crt-panel px-2.5 py-2 text-left text-[10px] font-semibold normal-case tracking-wide text-crt-phosphor-bright opacity-0 shadow-[0_4px_12px_rgba(0,0,0,0.45)] transition-opacity duration-100 group-hover/me-tip:opacity-100 crt-text-plain"
+          >
+            <span className="block">{name}</span>
+            <span className="block font-normal leading-snug text-crt-muted">{detail}</span>
+            <span className="block border-t border-crt-border pt-1.5 font-normal text-crt-muted">
+              Σ weight/day: {maxWeightPerDay} (14-day % uses this × 14)
+            </span>
+          </span>
+        )}
+      </div>
+
+      {expanded && fields.length > 0 && (
+        <div className="ml-4 mt-1 space-y-2 border-l border-crt-border/30 pl-3 py-1">
+          {fields.map((f) => (
+            <div key={f.key} className="flex flex-col gap-0.5">
+              <div className="flex items-center justify-between text-[10px] crt-text-plain">
+                <span className="text-crt-muted truncate max-w-[160px]" title={f.label}>{f.label}</span>
+                <span className={`font-mono ${f.successRate < 50 ? 'text-crt-danger' : 'text-crt-phosphor-dim'}`}>
+                  {f.successRate}%
+                </span>
+              </div>
+              <div className="h-0.5 w-full bg-crt-bar-track/30 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all ${f.successRate < 50 ? 'bg-crt-danger/50' : 'bg-crt-phosphor/40'}`}
+                  style={{ width: `${f.successRate}%` }}
+                />
+              </div>
+              {f.pointsLost > 0 && (
+                <span className="text-[8px] text-crt-danger/70 leading-none">
+                  -{f.pointsLost} pts lost
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -62,6 +108,7 @@ type DailyProductivityPoint = {
 type StatsPayload = {
   stats?: GrowthStatRow[];
   dailyStats?: GrowthStatRow[];
+  topFrictionPoints?: FieldStat[];
   dailyDate?: string;
   dailyLogged?: boolean;
   error?: string;
@@ -224,6 +271,7 @@ function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) 
 export default function GrowthStatsPanel() {
   const [stats, setStats] = useState<GrowthStatRow[] | null>(null);
   const [dailyStats, setDailyStats] = useState<GrowthStatRow[] | null>(null);
+  const [topFriction, setTopFriction] = useState<FieldStat[] | null>(null);
   const [dailyMeta, setDailyMeta] = useState<{
     date: string;
     logged: boolean;
@@ -249,6 +297,7 @@ export default function GrowthStatsPanel() {
         if (!cancelled) {
           setStats(Array.isArray(body.stats) ? body.stats : []);
           setDailyStats(Array.isArray(body.dailyStats) ? body.dailyStats : []);
+          setTopFriction(Array.isArray(body.topFrictionPoints) ? body.topFrictionPoints : []);
           setDailyMeta({
             date: typeof body.dailyDate === "string" ? body.dailyDate : "",
             logged: body.dailyLogged === true,
@@ -340,17 +389,41 @@ export default function GrowthStatsPanel() {
           variant="window"
         />
       </div>
+      
       <ProductivityDailySection days={dailyProductivity} />
-      <div className="flex min-w-0 flex-col gap-3 p-4 sm:p-6">
-        {stats.map((s) => (
-          <StatBar
-            key={s.id}
-            name={s.label}
-            detail={s.detail}
-            value={s.value}
-            maxWeightPerDay={s.maxWeightPerDay ?? 0}
-          />
-        ))}
+
+      <div className="flex min-w-0 flex-col gap-4 p-4 sm:p-6">
+        <div className="space-y-3">
+          {stats.map((s) => (
+            <StatBar
+              key={s.id}
+              name={s.label}
+              detail={s.detail}
+              value={s.value}
+              maxWeightPerDay={s.maxWeightPerDay ?? 0}
+              fields={s.fields}
+            />
+          ))}
+        </div>
+
+        {topFriction && topFriction.length > 0 && (
+          <div className="mt-4 border-t border-crt-border/50 pt-5">
+            <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-crt-danger">
+              [!] Top Friction Points (Lost Pts)
+            </h3>
+            <div className="space-y-2">
+              {topFriction.map((f) => (
+                <div key={f.key} className="flex items-center gap-3 text-[10px] crt-text-plain">
+                  <span className="text-crt-danger font-mono shrink-0">-{f.pointsLost}</span>
+                  <div className="flex min-w-0 flex-col">
+                    <span className="text-crt-phosphor truncate">{f.label}</span>
+                    <span className="text-[9px] text-crt-muted">Success: {f.successRate}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

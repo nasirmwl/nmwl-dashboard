@@ -73,7 +73,6 @@ export const TEMPLATE_GOOD_DAY_OPS: TemplateOp[] = [
   { section: "focus", key: "screen_zen_social_limits", checked: true },
   { section: "relationships", key: "real_contact", checked: true },
   { section: "relationships", key: "showed_up", checked: true },
-  { section: "relationships", key: "honesty_repair", checked: true },
   { section: "relationships", key: "boundaries", checked: true },
   { section: "social", key: "shared_sensitive_info", checked: false },
   { section: "social", key: "conflict_with_others", checked: false },
@@ -81,6 +80,8 @@ export const TEMPLATE_GOOD_DAY_OPS: TemplateOp[] = [
   { section: "social", key: "gossip_with_anyone", checked: false },
   { section: "social", key: "avoided_snark_when_tense", checked: true },
   { section: "social", key: "added_value_no_return", checked: true },
+  { section: "social", key: "communicated_friend", checked: true },
+  { section: "social", key: "family_one_hour", checked: true },
 ];
 
 /** Alias for {@link TEMPLATE_GOOD_DAY_OPS}. */
@@ -138,7 +139,6 @@ export const TEMPLATE_UNPRODUCTIVE_DAY_OPS: TemplateOp[] = [
   { section: "focus", key: "closure", checked: false },
   { section: "relationships", key: "real_contact", checked: false },
   { section: "relationships", key: "showed_up", checked: false },
-  { section: "relationships", key: "honesty_repair", checked: false },
   { section: "relationships", key: "boundaries", checked: false },
   { section: "social", key: "shared_sensitive_info", checked: true },
   { section: "social", key: "conflict_with_others", checked: true },
@@ -146,6 +146,8 @@ export const TEMPLATE_UNPRODUCTIVE_DAY_OPS: TemplateOp[] = [
   { section: "social", key: "gossip_with_anyone", checked: true },
   { section: "social", key: "avoided_snark_when_tense", checked: false },
   { section: "social", key: "added_value_no_return", checked: false },
+  { section: "social", key: "communicated_friend", checked: false },
+  { section: "social", key: "family_one_hour", checked: false },
 ];
 
 /** Away from routine: light discipline, minimal deep-work bars, still human basics. */
@@ -200,7 +202,6 @@ export const TEMPLATE_TRAVEL_DAY_OPS: TemplateOp[] = [
   { section: "focus", key: "screen_zen_social_limits", checked: true },
   { section: "relationships", key: "real_contact", checked: true },
   { section: "relationships", key: "showed_up", checked: true },
-  { section: "relationships", key: "honesty_repair", checked: true },
   { section: "relationships", key: "boundaries", checked: true },
   { section: "social", key: "shared_sensitive_info", checked: false },
   { section: "social", key: "conflict_with_others", checked: false },
@@ -208,6 +209,8 @@ export const TEMPLATE_TRAVEL_DAY_OPS: TemplateOp[] = [
   { section: "social", key: "gossip_with_anyone", checked: false },
   { section: "social", key: "avoided_snark_when_tense", checked: true },
   { section: "social", key: "added_value_no_return", checked: true },
+  { section: "social", key: "communicated_friend", checked: true },
+  { section: "social", key: "family_one_hour", checked: true },
 ];
 
 /** Intentional light / recovery day — same preset as travel (away from normal routine). */

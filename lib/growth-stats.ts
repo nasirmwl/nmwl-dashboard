@@ -1,6 +1,6 @@
-import type { DayEntry } from "./daily-checks-schema";
+import { type DayEntry, DAILY_CHECK_SECTIONS } from "./daily-checks-schema";
 
-export const SCORING_VERSION = "v4.0-growth-ai-ielts-weights-utc";
+export const SCORING_VERSION = "v4.1-social-friend-family-weights-utc";
 export const GROWTH_STATS_WINDOW_DAYS = 14;
 
 /** UTC days shown in the productivity heatmap (independent of category window). */
@@ -182,11 +182,10 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
     id: "relationships",
     label: "Relationships",
     detail:
-      "Time and presence with people who matter, honesty, repair after conflict, and whether you show up when it counts — family, close friends, partner, not follower counts.",
+      "Time and presence with people who matter, keeping commitments, and respecting boundaries when it counts — family, close friends, partner, not follower counts.",
     fields: [
       { section: "relationships", key: "real_contact", weight: 8, polarity: "good_when_true" },
       { section: "relationships", key: "showed_up", weight: 9, polarity: "good_when_true" },
-      { section: "relationships", key: "honesty_repair", weight: 8, polarity: "good_when_true" },
       { section: "relationships", key: "boundaries", weight: 8, polarity: "good_when_true" },
     ],
   },
@@ -232,6 +231,18 @@ export const GROWTH_STAT_BLOCKS: GrowthStatBlock[] = [
         weight: 18,
         polarity: "good_when_true",
       },
+      {
+        section: "social",
+        key: "communicated_friend",
+        weight: 18,
+        polarity: "good_when_true",
+      },
+      {
+        section: "social",
+        key: "family_one_hour",
+        weight: 25,
+        polarity: "good_when_true",
+      },
     ],
   },
 ];
@@ -245,6 +256,17 @@ for (const b of GROWTH_STAT_BLOCKS) {
 
 export function getGrowthFieldRule(section: string, key: string): GrowthStatField | undefined {
   return RULE_BY_CELL.get(`${section}:${key}`);
+}
+
+const HABIT_LABELS = new Map<string, string>();
+for (const s of DAILY_CHECK_SECTIONS) {
+  for (const item of s.items) {
+    HABIT_LABELS.set(`${s.section}:${item.key}`, item.label);
+  }
+}
+
+function getHabitLabel(section: string, key: string): string {
+  return HABIT_LABELS.get(`${section}:${key}`) || key.replace(/_/g, " ");
 }
 
 function blockMaxWeightPerDay(block: GrowthStatBlock): number {
@@ -269,12 +291,18 @@ export type GrowthStatRow = {
   detail: string;
   value: number;
   maxWeightPerDay: number;
+  fields?: FieldStat[];
 };
 
-/**
- * Weighted % per block: round(100 × earned / max), max = (sum of weights in block) × number of calendar days in window.
- * Missing days earn 0 on all items (strict calendar denominator).
- */
+export type FieldStat = {
+  section: string;
+  key: string;
+  label: string;
+  weight: number;
+  successRate: number; // 0-100
+  pointsLost: number; // Total points lost in window
+};
+
 /** Single-day weighted % over all growth-stat fields (0 if no entry). */
 export function productivityPercentForDayEntry(entry: DayEntry | undefined): number {
   const maxW = totalGrowthMaxWeightPerDay();
@@ -314,6 +342,47 @@ export function productivitySeriesFromRowDays(
   });
 }
 
+/**
+ * Calculates per-field statistics (success rate and points lost).
+ */
+export function fieldStatsFromRowDays(
+  rowDays: { entryDate: string; entry: DayEntry }[],
+  calendarDates: string[],
+): FieldStat[] {
+  const byDate = new Map<string, DayEntry>();
+  for (const r of rowDays) {
+    byDate.set(r.entryDate.slice(0, 10), r.entry);
+  }
+
+  const D = calendarDates.length;
+  const allFields: FieldStat[] = [];
+
+  for (const block of GROWTH_STAT_BLOCKS) {
+    for (const f of block.fields) {
+      let earned = 0;
+      for (const date of calendarDates) {
+        const entry = byDate.get(date);
+        earned += fieldContribution(entry, f);
+      }
+
+      const totalPossible = f.weight * D;
+      const pointsLost = totalPossible - earned;
+      const successRate = totalPossible > 0 ? Math.round((100 * earned) / totalPossible) : 0;
+
+      allFields.push({
+        section: f.section,
+        key: f.key,
+        label: getHabitLabel(f.section, f.key), 
+        weight: f.weight,
+        successRate,
+        pointsLost,
+      });
+    }
+  }
+
+  return allFields.sort((a, b) => b.pointsLost - a.pointsLost);
+}
+
 export function growthStatsFromRowDays(
   rowDays: { entryDate: string; entry: DayEntry }[],
   calendarDates: string[],
@@ -329,12 +398,27 @@ export function growthStatsFromRowDays(
     const sumW = blockMaxWeightPerDay(block);
     const maxPoints = sumW * D;
     let points = 0;
-    for (const date of calendarDates) {
-      const entry = byDate.get(date);
-      for (const f of block.fields) {
-        points += fieldContribution(entry, f);
+    const fieldStats: FieldStat[] = [];
+
+    for (const f of block.fields) {
+      let fEarned = 0;
+      for (const date of calendarDates) {
+        const entry = byDate.get(date);
+        fEarned += fieldContribution(entry, f);
       }
+      points += fEarned;
+      
+      const fMax = f.weight * D;
+      fieldStats.push({
+        section: f.section,
+        key: f.key,
+        label: getHabitLabel(f.section, f.key),
+        weight: f.weight,
+        successRate: fMax > 0 ? Math.round((100 * fEarned) / fMax) : 0,
+        pointsLost: fMax - fEarned,
+      });
     }
+
     const value = maxPoints > 0 ? Math.round((100 * points) / maxPoints) : 0;
     return {
       id: block.id,
@@ -342,6 +426,7 @@ export function growthStatsFromRowDays(
       detail: block.detail,
       value: Math.min(100, Math.max(0, value)),
       maxWeightPerDay: sumW,
+      fields: fieldStats.sort((a, b) => b.pointsLost - a.pointsLost),
     };
   });
 }
