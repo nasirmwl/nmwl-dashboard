@@ -65,7 +65,9 @@ export async function GET() {
 
     const stats = growthStatsFromRowDays(rowDays, calendarDates);
     const dailyProductivity = productivitySeriesFromRowDays(rowDays, productivityDates);
-    const topFrictionPoints = fieldStatsFromRowDays(rowDays, calendarDates).filter(f => f.pointsLost > 0).slice(0, 5);
+    const topFrictionPoints = fieldStatsFromRowDays(rowDays, calendarDates)
+      .filter((f) => f.pointsLost > 0)
+      .slice(0, 20);
 
     const todayUtc = calendarDates[calendarDates.length - 1];
     const todayRow = rowDays.find((r) => r.entryDate === todayUtc);

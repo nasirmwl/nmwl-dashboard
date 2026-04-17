@@ -409,7 +409,7 @@ export default function GrowthStatsPanel() {
         {topFriction && topFriction.length > 0 && (
           <div className="mt-4 border-t border-crt-border/50 pt-5">
             <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-crt-danger">
-              [!] Top Friction Points (Lost Pts)
+              [!] Top 20 Friction Points (Lost Pts)
             </h3>
             <div className="space-y-2">
               {topFriction.map((f) => (
