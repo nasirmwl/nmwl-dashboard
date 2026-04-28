@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { 
+  GROWTH_STAT_BLOCKS,
   PRODUCTIVITY_CHART_WINDOW_DAYS, 
   type GrowthStatRow, 
   type FieldStat 
@@ -284,6 +285,28 @@ export default function GrowthStatsPanel() {
     DailyProductivityPoint[] | null
   >(null);
   const [error, setError] = useState<string | null>(null);
+  const sectionLabelMap = useMemo(
+    () => new Map(GROWTH_STAT_BLOCKS.map((block) => [block.id, block.label])),
+    [],
+  );
+  const frictionByCategory = useMemo(() => {
+    if (!topFriction || topFriction.length === 0) return [];
+
+    const grouped = new Map<string, FieldStat[]>();
+    for (const item of topFriction) {
+      if (!grouped.has(item.section)) grouped.set(item.section, []);
+      grouped.get(item.section)?.push(item);
+    }
+
+    return Array.from(grouped.entries())
+      .map(([section, items]) => ({
+        section,
+        label: sectionLabelMap.get(section) ?? section.replace(/_/g, " "),
+        totalLost: items.reduce((sum, i) => sum + i.pointsLost, 0),
+        items: [...items].sort((a, b) => b.pointsLost - a.pointsLost),
+      }))
+      .sort((a, b) => b.totalLost - a.totalLost);
+  }, [sectionLabelMap, topFriction]);
 
   useEffect(() => {
     let cancelled = false;
@@ -406,18 +429,28 @@ export default function GrowthStatsPanel() {
           ))}
         </div>
 
-        {topFriction && topFriction.length > 0 && (
+        {frictionByCategory.length > 0 && (
           <div className="mt-4 border-t border-crt-border/50 pt-5">
             <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-crt-danger">
               [!] Top 20 Friction Points (Lost Pts)
             </h3>
-            <div className="space-y-2">
-              {topFriction.map((f) => (
-                <div key={f.key} className="flex items-center gap-3 text-[10px] crt-text-plain">
-                  <span className="text-crt-danger font-mono shrink-0">-{f.pointsLost}</span>
-                  <div className="flex min-w-0 flex-col">
-                    <span className="text-crt-phosphor truncate">{f.label}</span>
-                    <span className="text-[9px] text-crt-muted">Success: {f.successRate}%</span>
+            <div className="space-y-4">
+              {frictionByCategory.map((category) => (
+                <div key={category.section} className="space-y-2">
+                  <div className="flex items-center justify-between text-[10px] crt-text-plain">
+                    <span className="text-crt-muted uppercase tracking-wider">{category.label}</span>
+                    <span className="text-crt-danger font-mono">-{category.totalLost}</span>
+                  </div>
+                  <div className="space-y-2 pl-2 border-l border-crt-border/30">
+                    {category.items.map((f) => (
+                      <div key={`${f.section}-${f.key}`} className="flex items-center gap-3 text-[10px] crt-text-plain">
+                        <span className="text-crt-danger font-mono shrink-0">-{f.pointsLost}</span>
+                        <div className="flex min-w-0 flex-col">
+                          <span className="text-crt-phosphor truncate">{f.label}</span>
+                          <span className="text-[9px] text-crt-muted">Success: {f.successRate}%</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
