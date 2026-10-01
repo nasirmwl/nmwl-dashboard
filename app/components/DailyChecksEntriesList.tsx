@@ -93,20 +93,22 @@ export default function DailyChecksEntriesList() {
         })();
 
         return (
-          <details
+          <div
             key={row.date}
-            className="crt-panel overflow-hidden rounded-sm group open:ring-1 open:ring-crt-phosphor-dim/40"
+            className="crt-panel overflow-hidden rounded-sm has-[details[open]]:ring-1 has-[details[open]]:ring-crt-phosphor-dim/40"
           >
-            <summary className="cursor-pointer list-none p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 crt-text-plain [&::-webkit-details-marker]:hidden">
-              <span className="font-semibold text-crt-phosphor-bright tracking-wide">{dateLabel}</span>
-              <span className="text-sm text-crt-muted">
-                {row.checkedCount}/{row.totalCount} checked
-                {updatedLabel ? (
-                  <span className="text-crt-phosphor-dim ml-2">· updated {updatedLabel}</span>
-                ) : null}
-              </span>
-            </summary>
-            <div className="px-4 pb-4 sm:px-5 sm:pb-5 border-t border-crt-border space-y-4">
+            <div className="flex items-start justify-between gap-3 p-4 sm:p-5">
+              <details className="min-w-0 flex-1">
+                <summary className="cursor-pointer list-none flex flex-col gap-1 crt-text-plain [&::-webkit-details-marker]:hidden">
+                  <span className="font-semibold text-crt-phosphor-bright tracking-wide">{dateLabel}</span>
+                  <span className="text-sm text-crt-muted">
+                    {row.checkedCount}/{row.totalCount} checked
+                    {updatedLabel ? (
+                      <span className="text-crt-phosphor-dim ml-2">· updated {updatedLabel}</span>
+                    ) : null}
+                  </span>
+                </summary>
+                <div className="pt-4 mt-4 border-t border-crt-border space-y-4">
               {DAILY_CHECK_SECTIONS.map((fieldset) => (
                 <div key={fieldset.section}>
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-crt-phosphor-dim mb-2 crt-text-plain">
@@ -162,8 +164,16 @@ export default function DailyChecksEntriesList() {
                   Edit this day
                 </Link>
               </p>
+                </div>
+              </details>
+              <Link
+                href={`/daily-checks?date=${encodeURIComponent(row.date)}`}
+                className="inline-flex shrink-0 items-center justify-center px-3 py-1.5 rounded-sm border border-crt-border bg-crt-bar-track/60 text-xs font-medium text-crt-phosphor-bright crt-text-plain transition-colors hover:border-crt-phosphor-dim hover:bg-crt-bg/50"
+              >
+                Edit
+              </Link>
             </div>
-          </details>
+          </div>
         );
       })}
     </div>

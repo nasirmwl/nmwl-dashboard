@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   DAILY_CHECK_SECTIONS,
@@ -82,19 +83,37 @@ type DailyChecksEntryProps = {
   initialDate?: string;
 };
 
+function isIsoDate(value: string | undefined): value is string {
+  return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
 export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps) {
+  const router = useRouter();
   const [dateStr, setDateStr] = useState(() =>
-    initialDate && /^\d{4}-\d{2}-\d{2}$/.test(initialDate) ? initialDate : todayLocalISO(),
+    isIsoDate(initialDate) ? initialDate : todayLocalISO(),
   );
   const [flat, setFlat] = useState<Record<string, boolean>>({});
   const [status, setStatus] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [loadingEntry, setLoadingEntry] = useState(false);
   const [saving, setSaving] = useState(false);
+  const flatRef = useRef<Record<string, boolean>>({});
+  const dateStrRef = useRef(dateStr);
+  const saveQueueRef = useRef(Promise.resolve());
+  /** Date already written into the edit URL, so later checks only save. */
+  const editUrlDateRef = useRef<string | null>(isIsoDate(initialDate) ? initialDate : null);
+
+  dateStrRef.current = dateStr;
+
+  const applyFlat = (next: Record<string, boolean>) => {
+    flatRef.current = next;
+    setFlat(next);
+  };
 
   useEffect(() => {
-    if (initialDate && /^\d{4}-\d{2}-\d{2}$/.test(initialDate)) {
+    if (isIsoDate(initialDate)) {
       setDateStr(initialDate);
+      editUrlDateRef.current = initialDate;
     }
   }, [initialDate]);
 
@@ -118,13 +137,13 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
         const entry = body.entry as DayEntry | null | undefined;
         if (ac.signal.aborted) return;
         if (entry) {
-          setFlat(flatFromDay(entry));
+          applyFlat(flatFromDay(entry));
         } else {
-          setFlat(flatFromDay(loadLog()[dateStr]));
+          applyFlat(flatFromDay(loadLog()[dateStr]));
         }
       } catch {
         if (ac.signal.aborted) return;
-        setFlat(flatFromDay(loadLog()[dateStr]));
+        applyFlat(flatFromDay(loadLog()[dateStr]));
       } finally {
         if (!ac.signal.aborted) setLoadingEntry(false);
       }
@@ -142,14 +161,63 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
     [],
   );
 
+  const persistFlat = async (date: string, nextFlat: Record<string, boolean>) => {
+    const entry = buildEntryFromFlat(nextFlat);
+    const log = loadLog();
+    log[date] = entry;
+    saveLog(log);
+    const r = await fetch("/api/supabase/daily-checks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, entry }),
+    });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      throw new Error(typeof body.error === "string" ? body.error : "Save failed");
+    }
+  };
+
+  const enqueueSave = (date: string, nextFlat: Record<string, boolean>, source: "check" | "submit") => {
+    saveQueueRef.current = saveQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        setSaving(true);
+        try {
+          await persistFlat(date, nextFlat);
+          if (dateStrRef.current !== date) return;
+          const openingEdit = editUrlDateRef.current !== date;
+          if (openingEdit) {
+            editUrlDateRef.current = date;
+            router.replace(`/daily-checks?date=${encodeURIComponent(date)}`, { scroll: false });
+            setStatus(`Saved ${date}. Editing this day.`);
+          } else if (source === "check") {
+            setStatus(`Saved ${date}.`);
+          } else {
+            setStatus(`Entry saved for ${date}.`);
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Unknown error";
+          setStatus(`Saved locally only. Cloud sync failed: ${msg}`);
+        } finally {
+          setSaving(false);
+        }
+      });
+  };
+
   const setChecked = (section: string, key: string, checked: boolean) => {
     const id = flatKeyForCheckbox(section, key);
     if (!checklistIds.has(id)) return;
-    setFlat((prev) => ({ ...prev, [id]: checked }));
+    const next = { ...flatRef.current, [id]: checked };
+    applyFlat(next);
+    if (!dateStr) {
+      setStatus("Please select a date.");
+      return;
+    }
+    enqueueSave(dateStr, next, "check");
   };
 
   const applyDayTemplate = (kind: DayTemplateKind) => {
-    setFlat(flatFromDayTemplateKind(kind));
+    applyFlat(flatFromDayTemplateKind(kind));
     setStatus(`${DAY_TEMPLATE_BUTTON_LABEL[kind]} template applied — review and save.`);
   };
 
@@ -159,31 +227,7 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
       setStatus("Please select a date.");
       return;
     }
-    const entry = buildEntryFromFlat(flat);
-    setSaving(true);
-    try {
-      const r = await fetch("/api/supabase/daily-checks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: dateStr, entry }),
-      });
-      const body = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        throw new Error(typeof body.error === "string" ? body.error : "Save failed");
-      }
-      const log = loadLog();
-      log[dateStr] = entry;
-      saveLog(log);
-      setStatus(`Entry saved for ${dateStr}.`);
-    } catch (err) {
-      const log = loadLog();
-      log[dateStr] = entry;
-      saveLog(log);
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      setStatus(`Saved locally only. Cloud sync failed: ${msg}`);
-    } finally {
-      setSaving(false);
-    }
+    enqueueSave(dateStr, flatRef.current, "submit");
   };
 
   if (!hydrated) {
@@ -198,6 +242,7 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
   }
 
   const formBusy = loadingEntry || saving;
+  const editing = isIsoDate(initialDate) && initialDate === dateStr;
 
   return (
     <article
@@ -207,12 +252,14 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
       <div className="p-4 sm:p-6 space-y-4">
         <header>
           <h1 className="text-lg sm:text-xl font-bold tracking-wide text-crt-phosphor-bright crt-text-plain">
-            log entry
+            {editing ? "edit entry" : "log entry"}
           </h1>
         </header>
 
         <p className="text-sm text-crt-muted crt-text-plain leading-relaxed">
-          Select the items that were true for the chosen date.
+          {editing
+            ? "Changes to a check save immediately for this date."
+            : "Select the items that were true for the chosen date. The first check saves the day and opens it for editing."}
         </p>
 
         <form
@@ -255,7 +302,7 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
               ))}
             </div>
             <p className="text-[11px] text-crt-muted crt-text-plain leading-snug">
-              Fills every checkbox from that day template. You can still edit before saving.
+              Fills every checkbox from that day template. Save entry to store a template fill.
             </p>
           </div>
 

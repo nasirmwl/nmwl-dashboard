@@ -28,7 +28,7 @@ export default function EntriesPage() {
               Saved entries
             </h1>
             <p className="text-sm text-crt-muted crt-text-plain mt-2 leading-relaxed">
-              Newest first. Open a row to see what was checked; links go to the editor for that date.
+              Newest first. Open a row to see what was checked, or use Edit to change that day.
             </p>
           </header>
 
