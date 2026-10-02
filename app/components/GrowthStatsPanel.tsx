@@ -11,6 +11,24 @@ import {
 
 import GrowthStatsRadar from "./GrowthStatsRadar";
 
+/** Short label for the bar. Multi-word names use initials; single words use a unique code. */
+function statAcronym(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length > 1) {
+    return words.map((word) => word[0]?.toUpperCase() ?? "").join("");
+  }
+  const singles: Record<string, string> = {
+    Discipline: "DIS",
+    Growth: "GRW",
+    Sleep: "SLP",
+    Finance: "FIN",
+    Focus: "FOC",
+    Relationships: "REL",
+    Social: "SOC",
+  };
+  return singles[name] ?? name.slice(0, 3).toUpperCase();
+}
+
 function StatBar({
   name,
   detail,
@@ -26,6 +44,7 @@ function StatBar({
 }) {
   const [expanded, setExpanded] = useState(false);
   const clamped = Math.min(100, Math.max(0, value));
+  const acronym = statAcronym(name);
 
   return (
     <div className="flex flex-col">
@@ -37,11 +56,12 @@ function StatBar({
           <span
             className="me-stat-label justify-self-start text-left normal-case tracking-normal flex items-center gap-1.5"
             title={name}
+            aria-label={name}
           >
             <span className={`text-[8px] transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}>
               ▶
             </span>
-            {name}
+            {acronym}
           </span>
           <div
             className="me-stat-track"
@@ -269,7 +289,12 @@ function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) 
   );
 }
 
-export default function GrowthStatsPanel() {
+export default function GrowthStatsPanel({
+  showTopVisuals = false,
+}: {
+  /** Eye banner and radar charts. Hidden until the header eye control is opened. */
+  showTopVisuals?: boolean;
+}) {
   const [stats, setStats] = useState<GrowthStatRow[] | null>(null);
   const [dailyStats, setDailyStats] = useState<GrowthStatRow[] | null>(null);
   const [topFriction, setTopFriction] = useState<FieldStat[] | null>(null);
@@ -362,9 +387,11 @@ export default function GrowthStatsPanel() {
   ) {
     return (
       <div className="crt-panel overflow-hidden rounded-sm" aria-busy="true">
-        <div className="h-36 w-full overflow-hidden sm:h-40">
-          <div className="h-full w-full bg-crt-bar-track/40 animate-pulse" />
-        </div>
+        {showTopVisuals ? (
+          <div className="h-36 w-full overflow-hidden sm:h-40">
+            <div className="h-full w-full bg-crt-bar-track/40 animate-pulse" />
+          </div>
+        ) : null}
         <div className="flex min-w-0 flex-col gap-3 p-4 sm:p-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="me-stat-row crt-text-plain">
@@ -382,36 +409,40 @@ export default function GrowthStatsPanel() {
 
   return (
     <div className="crt-panel crt-panel--tooltips rounded-sm">
-      <div className="h-36 w-full overflow-hidden sm:h-40">
-        <img
-          src="/girl-green-eye.png"
-          alt=""
-          className="block h-full w-full object-cover object-center"
-          decoding="async"
-        />
-      </div>
+      {showTopVisuals ? (
+        <>
+          <div className="eye-banner h-36 w-full overflow-hidden sm:h-40">
+            <img
+              src="/girl-green-eye.png"
+              alt=""
+              className="block h-full w-full object-cover object-center"
+              decoding="async"
+            />
+          </div>
+          <div className="grid grid-cols-1 border-b border-crt-border sm:grid-cols-2">
+            <div className="border-b border-crt-border sm:border-b-0 sm:border-r border-crt-border">
+              <GrowthStatsRadar
+                stats={dailyStats}
+                title="Today"
+                variant="today"
+                caption={
+                  dailyMeta.logged
+                    ? null
+                    : `No log for ${dailyMeta.date || "today"} — scores are 0`
+                }
+              />
+            </div>
+            <GrowthStatsRadar
+              stats={stats}
+              title={`${meta.windowDays}-day window`}
+              variant="window"
+            />
+          </div>
+        </>
+      ) : null}
       <p className="border-b border-crt-border px-4 py-2 text-[11px] leading-snug text-crt-muted sm:px-6 crt-text-plain">
         Last {meta.windowDays} days · {meta.loggedDaysInWindow} logged
       </p>
-      <div className="grid grid-cols-1 border-b border-crt-border sm:grid-cols-2">
-        <div className="border-b border-crt-border sm:border-b-0 sm:border-r border-crt-border">
-          <GrowthStatsRadar
-            stats={dailyStats}
-            title="Today"
-            variant="today"
-            caption={
-              dailyMeta.logged
-                ? null
-                : `No log for ${dailyMeta.date || "today"} — scores are 0`
-            }
-          />
-        </div>
-        <GrowthStatsRadar
-          stats={stats}
-          title={`${meta.windowDays}-day window`}
-          variant="window"
-        />
-      </div>
       
       <ProductivityDailySection days={dailyProductivity} />
 
