@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -15,11 +16,25 @@ import {
   flatFromDayTemplateKind,
   type DayTemplateKind,
 } from "@/lib/daily-check-templates";
-import { getGrowthFieldRule } from "@/lib/growth-stats";
+import { getGrowthFieldRule, sectionScoreIsMax } from "@/lib/growth-stats";
 
 const STORAGE_KEY = "nmwl-daily-checks";
 
 const SECTIONS = DAILY_CHECK_SECTIONS;
+
+function sectionIsMax(flat: Record<string, boolean>, section: string): boolean {
+  return sectionScoreIsMax(
+    section,
+    (sectionName, key) => flat[flatKeyForCheckbox(sectionName, key)] === true,
+  );
+}
+
+/** Finished sections start closed. The rest stay open so the unfinished work is in view. */
+function openStateForFlat(flat: Record<string, boolean>): Record<string, boolean> {
+  return Object.fromEntries(
+    SECTIONS.map((section) => [section.section, !sectionIsMax(flat, section.section)]),
+  );
+}
 
 const DAY_TEMPLATE_KINDS = [
   "productive",
@@ -95,8 +110,11 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
   const [flat, setFlat] = useState<Record<string, boolean>>({});
   const [status, setStatus] = useState("");
   const [hydrated, setHydrated] = useState(false);
-  const [loadingEntry, setLoadingEntry] = useState(false);
+  const [loadingEntry, setLoadingEntry] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(SECTIONS.map((section) => [section.section, true])),
+  );
   const flatRef = useRef<Record<string, boolean>>({});
   const dateStrRef = useRef(dateStr);
   const saveQueueRef = useRef(Promise.resolve());
@@ -136,14 +154,15 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
         if (!r.ok) throw new Error(typeof body.error === "string" ? body.error : "Failed to load");
         const entry = body.entry as DayEntry | null | undefined;
         if (ac.signal.aborted) return;
-        if (entry) {
-          applyFlat(flatFromDay(entry));
-        } else {
-          applyFlat(flatFromDay(loadLog()[dateStr]));
-        }
+        const loaded = flatFromDay(entry ?? loadLog()[dateStr]);
+        if (ac.signal.aborted) return;
+        applyFlat(loaded);
+        setOpenSections(openStateForFlat(loaded));
       } catch {
         if (ac.signal.aborted) return;
-        applyFlat(flatFromDay(loadLog()[dateStr]));
+        const loaded = flatFromDay(loadLog()[dateStr]);
+        applyFlat(loaded);
+        setOpenSections(openStateForFlat(loaded));
       } finally {
         if (!ac.signal.aborted) setLoadingEntry(false);
       }
@@ -306,14 +325,41 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
             </p>
           </div>
 
-          {SECTIONS.map((fieldset) => (
-            <fieldset
+          {SECTIONS.map((fieldset) => {
+            const sectionOpen = openSections[fieldset.section] ?? true;
+            const atMax = !loadingEntry && sectionIsMax(flat, fieldset.section);
+            return (
+            <details
               key={fieldset.section}
-              className="rounded-sm border border-crt-border bg-crt-bar-track/40 p-4 space-y-3 crt-text-plain"
+              open={sectionOpen}
+              onToggle={(e) => {
+                const isOpen = e.currentTarget.open;
+                setOpenSections((prev) =>
+                  prev[fieldset.section] === isOpen
+                    ? prev
+                    : { ...prev, [fieldset.section]: isOpen },
+                );
+              }}
+              className="rounded-sm border border-crt-border bg-crt-bar-track/40 crt-text-plain"
             >
-              <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-crt-phosphor-bright">
-                {fieldset.legend}
-              </legend>
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-crt-phosphor-bright select-none [&::-webkit-details-marker]:hidden">
+                <span className="inline-flex items-center gap-2">
+                  {fieldset.legend}
+                  {atMax ? (
+                    <Check
+                      className="h-3.5 w-3.5 text-crt-phosphor"
+                      aria-hidden
+                      strokeWidth={2.75}
+                    />
+                  ) : null}
+                  {atMax ? <span className="sr-only">maximum score</span> : null}
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 text-crt-phosphor-dim transition-transform ${sectionOpen ? "rotate-180" : ""}`}
+                  aria-hidden
+                />
+              </summary>
+              <div className="space-y-1 px-4 pb-4">
               {fieldset.items.map((item) => {
                 const id = `${fieldset.section}-${item.key}`;
                 const checked =
@@ -365,8 +411,10 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
                   </label>
                 );
               })}
-            </fieldset>
-          ))}
+              </div>
+            </details>
+            );
+          })}
 
           <div className="pt-1">
             <button

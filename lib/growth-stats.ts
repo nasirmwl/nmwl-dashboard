@@ -252,6 +252,19 @@ export function getGrowthFieldRule(section: string, key: string): GrowthStatFiel
   return RULE_BY_CELL.get(`${section}:${key}`);
 }
 
+/** True when every weighted field in the section is already earning its full points. */
+export function sectionScoreIsMax(
+  section: string,
+  isChecked: (section: string, key: string) => boolean,
+): boolean {
+  const block = GROWTH_STAT_BLOCKS.find((candidate) => candidate.id === section);
+  if (!block || block.fields.length === 0) return false;
+  return block.fields.every((field) => {
+    const checked = isChecked(field.section, field.key);
+    return field.polarity === "good_when_true" ? checked : !checked;
+  });
+}
+
 const HABIT_LABELS = new Map<string, string>();
 for (const s of DAILY_CHECK_SECTIONS) {
   for (const item of s.items) {
