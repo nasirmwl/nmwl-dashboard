@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Minus, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -365,6 +365,11 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
                 const checked =
                   flat[flatKeyForCheckbox(fieldset.section, item.key)] === true;
                 const rule = getGrowthFieldRule(fieldset.section, item.key);
+                const scoring = rule
+                  ? rule.polarity === "good_when_false"
+                    ? !checked
+                    : checked
+                  : false;
                 return (
                   <label
                     key={item.key}
@@ -398,14 +403,22 @@ export default function DailyChecksEntry({ initialDate }: DailyChecksEntryProps)
                     </span>
                     {rule ? (
                       <span
-                        className="mt-0.5 shrink-0 text-[10px] font-medium tabular-nums text-crt-phosphor-dim"
+                        className={`mt-0.5 inline-flex shrink-0 items-center gap-0.5 text-[10px] font-medium tabular-nums ${
+                          scoring ? "text-crt-phosphor-bright" : "text-crt-danger"
+                        }`}
                         title={
-                          rule.polarity === "good_when_false"
-                            ? "Full weight counts toward 14-day score when this box is unchecked"
-                            : "Full weight counts toward 14-day score when this box is checked"
+                          scoring
+                            ? `+${rule.weight} toward today's score`
+                            : `−${rule.weight} off today's score`
                         }
+                        aria-label={scoring ? `plus ${rule.weight}` : `minus ${rule.weight}`}
                       >
-                        w{rule.weight}
+                        {scoring ? (
+                          <Plus className="h-3 w-3" aria-hidden strokeWidth={2.75} />
+                        ) : (
+                          <Minus className="h-3 w-3" aria-hidden strokeWidth={2.75} />
+                        )}
+                        {rule.weight}
                       </span>
                     ) : null}
                   </label>
