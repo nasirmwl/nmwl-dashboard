@@ -9,6 +9,8 @@ import {
   type FieldStat 
 } from "@/lib/growth-stats";
 
+import { rankForScore } from "@/lib/metro-ranks";
+
 import GrowthStatsRadar from "./GrowthStatsRadar";
 
 /** Short label for the bar. Multi-word names use initials; single words use a unique code. */
@@ -171,10 +173,65 @@ function productivityHeatmapCells(
 
 const HEATMAP_DOW_LABELS = ["S", "M", "T", "W", "T", "F", "S"] as const;
 
+function todayUtcISO(): string {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function windowAverage(stats: GrowthStatRow[]): number {
+  if (stats.length === 0) return 0;
+  const total = stats.reduce((sum, row) => sum + row.value, 0);
+  return Math.round(total / stats.length);
+}
+
+function RankAboveGraph({
+  stats,
+  windowDays,
+}: {
+  stats: GrowthStatRow[];
+  windowDays: number;
+}) {
+  const score = windowAverage(stats);
+  const rank = rankForScore(score);
+
+  return (
+    <section
+      className="border-t border-crt-border px-4 py-4 sm:px-6"
+      aria-label={`${rank.name}, level ${rank.level}`}
+    >
+      <div className="flex items-start gap-3 sm:gap-4">
+        <img
+          src={rank.image}
+          alt=""
+          className="h-44 w-28 shrink-0 rounded-sm bg-crt-bg object-contain object-center sm:h-52 sm:w-36"
+          decoding="async"
+        />
+        <div className="min-w-0 flex-1 crt-text-plain">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-crt-muted">
+            LV {rank.level} · {rank.name} · {rank.weapon}
+          </p>
+          <p className="mt-1 text-sm leading-snug text-crt-phosphor-bright">
+            {windowDays}-day average is {score}%. That band is {rank.min}–{rank.max}, so the commit graph is read as a {rank.name}.
+          </p>
+          <ul className="mt-2 space-y-1 text-[11px] leading-snug text-crt-muted">
+            {rank.capabilities.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) {
   const from = days[0]?.date ?? "";
   const to = days[days.length - 1]?.date ?? "";
 
+  const todayIso = todayUtcISO();
   const cells = useMemo(() => productivityHeatmapCells(days), [days]);
   const weeks = useMemo(() => {
     if (cells.length === 0) return [];
@@ -218,6 +275,7 @@ function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) 
               >
                 {week.map((cell, ri) => {
                   const key = cell ? cell.date : `empty-${wi}-${ri}`;
+                  const isToday = cell?.date === todayIso;
                   const fill = cell
                     ? productivityHeatFill(cell.score, cell.logged)
                     : "color-mix(in srgb, var(--crt-phosphor) 6%, var(--crt-bg))";
@@ -234,7 +292,13 @@ function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) 
                     >
                       <div
                         className="aspect-square w-full min-h-0 rounded-[3px]"
-                        style={{ backgroundColor: fill }}
+                        style={{
+                          backgroundColor: fill,
+                          boxShadow: isToday
+                            ? "inset 0 0 0 1px var(--crt-phosphor-bright)"
+                            : undefined,
+                        }}
+                        aria-current={isToday ? "date" : undefined}
                       />
                       <span
                         role="tooltip"
@@ -244,7 +308,7 @@ function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) 
                           <>
                             <span className="block tabular-nums">{tooltipDate}</span>
                             <span className="block font-normal leading-snug text-crt-muted">
-                              {tooltipMain}
+                              {isToday ? `Today · ${tooltipMain}` : tooltipMain}
                             </span>
                           </>
                         ) : (
@@ -400,14 +464,14 @@ export default function GrowthStatsPanel({
     <div className="crt-panel crt-panel--tooltips rounded-sm">
       {showTopVisuals ? (
         <>
-          <div className="eye-banner h-36 w-full overflow-hidden sm:h-40">
+          {/* <div className="eye-banner h-36 w-full overflow-hidden sm:h-40">
             <img
               src="/girl-green-eye.png"
               alt=""
               className="block h-full w-full object-cover object-center"
               decoding="async"
             />
-          </div>
+          </div> */}
           <div className="grid grid-cols-1 border-b border-crt-border sm:grid-cols-2">
             <div className="border-b border-crt-border sm:border-b-0 sm:border-r border-crt-border">
               <GrowthStatsRadar
@@ -433,6 +497,7 @@ export default function GrowthStatsPanel({
         Last {meta.windowDays} days · {meta.loggedDaysInWindow} logged
       </p>
       
+      <RankAboveGraph stats={stats} windowDays={meta.windowDays} />
       <ProductivityDailySection days={dailyProductivity} />
 
       <div className="flex min-w-0 flex-col gap-4 p-4 sm:p-6">
