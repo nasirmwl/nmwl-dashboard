@@ -146,15 +146,11 @@ function parseIsoDateUtc(iso: string): Date {
   return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1));
 }
 
-/** Square fill from daily score (warmer = lower, greener = higher). */
+/** Square fill: one green, mixed into the background by score. */
 function productivityHeatFill(score: number, logged: boolean): string {
-  if (!logged) {
-    return "color-mix(in srgb, var(--crt-muted) 22%, var(--crt-bar-track))";
-  }
   const s = Math.min(100, Math.max(0, score));
-  const h = 12 + (s / 100) * 108;
-  const L = 34 + (s / 100) * 26;
-  return `hsl(${h} 58% ${L}%)`;
+  const pct = logged ? 14 + (s / 100) * 86 : 8;
+  return `color-mix(in srgb, var(--crt-phosphor) ${pct}%, var(--crt-bg))`;
 }
 
 /** Pad to full weeks (Sun→Sat columns), GitHub-style. */
@@ -224,7 +220,7 @@ function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) 
                   const key = cell ? cell.date : `empty-${wi}-${ri}`;
                   const fill = cell
                     ? productivityHeatFill(cell.score, cell.logged)
-                    : "var(--crt-bar-track)";
+                    : "color-mix(in srgb, var(--crt-phosphor) 6%, var(--crt-bg))";
                   const tooltipMain = !cell
                     ? "Outside range"
                     : cell.logged
@@ -237,14 +233,8 @@ function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) 
                       className="group/heat-cell relative aspect-square w-full min-h-0 cursor-default hover:z-20"
                     >
                       <div
-                        className="aspect-square w-full min-h-0 rounded-[3px] border border-crt-border/50"
-                        style={{
-                          backgroundColor: fill,
-                          boxShadow:
-                            cell && cell.logged
-                              ? "inset 0 1px 0 rgba(255,255,255,0.08)"
-                              : undefined,
-                        }}
+                        className="aspect-square w-full min-h-0 rounded-[3px]"
+                        style={{ backgroundColor: fill }}
                       />
                       <span
                         role="tooltip"
@@ -274,10 +264,9 @@ function ProductivityDailySection({ days }: { days: DailyProductivityPoint[] }) 
             {[0, 25, 50, 75, 100].map((level) => (
               <div
                 key={level}
-                className="aspect-square w-3 min-w-3 rounded-[2px] border border-crt-border/50 sm:w-3.5 sm:min-w-3.5"
+                className="aspect-square w-3 min-w-3 rounded-[2px] sm:w-3.5 sm:min-w-3.5"
                 style={{
                   backgroundColor: productivityHeatFill(level, true),
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
                 }}
               />
             ))}
@@ -460,7 +449,7 @@ export default function GrowthStatsPanel({
           ))}
         </div>
 
-        {frictionByCategory.length > 0 && (
+        {showTopVisuals && frictionByCategory.length > 0 && (
           <div className="mt-4 border-t border-crt-border/50 pt-5">
             <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-crt-danger">
               [!] Top 20 Friction Points (Lost Pts)

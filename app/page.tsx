@@ -52,7 +52,7 @@ export default function Home() {
               <button
                 type="button"
                 aria-pressed={showTopVisuals}
-                aria-label={showTopVisuals ? 'Hide charts and image' : 'Show charts and image'}
+                aria-label={showTopVisuals ? 'Hide charts, image, and friction points' : 'Show charts, image, and friction points'}
                 onClick={() => setShowTopVisuals((open) => !open)}
                 className="inline-flex size-8 items-center justify-center rounded-sm border border-crt-border text-crt-phosphor transition-colors hover:border-crt-phosphor-dim hover:text-crt-phosphor-bright"
               >
