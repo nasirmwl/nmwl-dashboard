@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Home } from "lucide-react";
 
 import DailyChecksEntriesList from "../components/DailyChecksEntriesList";
 import ProtectedPage from "../components/ProtectedPage";
@@ -8,19 +9,28 @@ export default function EntriesPage() {
     <ProtectedPage>
       <div className="crt-screen min-h-screen">
         <main className="mx-auto w-full max-w-[700px] px-4 py-6 sm:py-8">
-          <nav className="flex flex-wrap justify-end gap-x-4 gap-y-1 mb-4 text-sm crt-text-plain">
+          <nav className="mb-4 flex items-center justify-between gap-3 text-sm crt-text-plain">
             <Link
               href="/"
-              className="font-medium text-crt-phosphor hover:text-crt-phosphor-bright hover:underline"
+              aria-label="Home"
+              className="inline-flex size-8 items-center justify-center rounded-sm border border-crt-border text-crt-phosphor transition-colors hover:border-crt-phosphor-dim hover:text-crt-phosphor-bright"
             >
-              Summary
+              <Home className="size-4" strokeWidth={1.75} aria-hidden="true" />
             </Link>
-            <Link
-              href="/daily-checks"
-              className="font-medium text-crt-phosphor hover:text-crt-phosphor-bright hover:underline"
-            >
-              Daily checks
-            </Link>
+            <div className="flex flex-wrap justify-end gap-x-4 gap-y-1">
+              <Link
+                href="/"
+                className="font-medium text-crt-phosphor hover:text-crt-phosphor-bright hover:underline"
+              >
+                Summary
+              </Link>
+              <Link
+                href="/daily-checks"
+                className="font-medium text-crt-phosphor hover:text-crt-phosphor-bright hover:underline"
+              >
+                Daily checks
+              </Link>
+            </div>
           </nav>
 
           <header className="mb-6">
