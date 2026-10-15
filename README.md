@@ -24,6 +24,21 @@ Key Features
 - radar charts added
   ![](./dashboardv3.png)
 
+
+
+#### dashboard v4
+
+- level and character logic added
+- 100 days commit heatmap added
+- dynamic visibility handler added
+- top lost friction points added
+- eye image removed for better simplicity
+- gamification implemented with character level logic which is consist of 7 levels
+- direct auto save fuctionality during create or edit when you click on each checkbox
+- names of section shortened for better privacy
+- things i plan to implement in v5 - different themes beside green fall out theme and daily chain logic it will be different than heatmap.
+  ![](./dashboardv4.png)
+
 ## Run locally
 
 ```bash
