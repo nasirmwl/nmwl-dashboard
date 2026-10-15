@@ -497,7 +497,9 @@ export default function GrowthStatsPanel({
         Last {meta.windowDays} days · {meta.loggedDaysInWindow} logged
       </p>
       
-      <RankAboveGraph stats={stats} windowDays={meta.windowDays} />
+      {showTopVisuals ? (
+        <RankAboveGraph stats={stats} windowDays={meta.windowDays} />
+      ) : null}
       <ProductivityDailySection days={dailyProductivity} />
 
       <div className="flex min-w-0 flex-col gap-4 p-4 sm:p-6">
