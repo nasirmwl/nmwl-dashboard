@@ -3,6 +3,7 @@
 A high-performance, minimalist command center featuring a Green CRT / Fallout-inspired UI.
 
 Key Features
+
 - Visual Insights: Dynamic Radar Charts for multi-dimensional progress visualization
 - Weighted Analytics: Daily checks with weighted variables for precise trend tracking and life management.
 - Note Vault: Streamlined interface for rapid note-taking and archival.
@@ -24,8 +25,6 @@ Key Features
 - radar charts added
   ![](./dashboardv3.png)
 
-
-
 #### dashboard v4
 
 - level and character logic added
@@ -37,6 +36,7 @@ Key Features
 - direct auto save fuctionality during create or edit when you click on each checkbox
 - names of section shortened for better privacy
 - things i plan to implement in v5 - different themes beside green fall out theme and daily chain logic it will be different than heatmap.
+
   ![](./dashboardv4.png)
 
 ## Run locally
