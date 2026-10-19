@@ -35,9 +35,19 @@ Key Features
 - gamification implemented with character level logic which is consist of 7 levels
 - direct auto save fuctionality during create or edit when you click on each checkbox
 - names of section shortened for better privacy
-- things i plan to implement in v5 - different themes beside green fall out theme and daily chain logic it will be different than heatmap.
 
   ![](./dashboardv4.png)
+
+#### dashboard v5
+
+- daily chain on the home page, separate from the checklist heatmap
+- two months drawn as one continuous calendar; the year is shown once when both months share it
+- a day holds only when every link is checked; a held day shows the chain mark, and a line joins it to the next held day
+- links are a standing list (`chain_templates`) and repeat on every day, unchecked until that day is marked
+- each day is a `chains` row; its checks live in `chain_items`; streak numbers live on `chain_tracker`
+- current streak walks back through held days; an open today does not break the run; longest streak never goes down
+- a missed day, or a day with no row after the chain has started, breaks the line
+- different themes beside the green fallout theme are still planned
 
 ## Run locally
 
