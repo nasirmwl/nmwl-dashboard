@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Eye, EyeOff, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import ChainSection from './components/ChainSection';
 import DailyFocusSection from './components/DailyFocusSection';
 import GrowthStatsPanel from './components/GrowthStatsPanel';
 import NotesSection from './components/NotesSection';
@@ -93,6 +94,10 @@ export default function Home() {
                 <GrowthStatsPanel showTopVisuals={showTopVisuals} />
               </section>
             )}
+
+            <section>
+              <ChainSection />
+            </section>
 
             {/* <section>
               <WeatherSection />
