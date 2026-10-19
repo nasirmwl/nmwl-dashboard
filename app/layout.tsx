@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Personal Dashboard",
-  description: "Your personal dashboard with weather, notes, and more",
+  title: "nmwl-dashboard",
+  description: "optimal, performance-driven dashboard",
 };
 
 export default function RootLayout({
@@ -26,6 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+    <head>
+      <link rel="icon" href="/favicon-32x32.png"  sizes="32x32"/>
+    </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} relative font-mono antialiased`}
       >
