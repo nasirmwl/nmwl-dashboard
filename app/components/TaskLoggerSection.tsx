@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ArchiveRestore, Pause, Pencil, Play, Plus, Trash2, Undo2 } from "lucide-react";
+import { Pause, Pencil, Play, Plus, Trash2, Undo2 } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -10,9 +10,8 @@ import {
   insertEntry,
   insertTask,
   newId,
-  removeTask,
+  deleteTask as deleteTaskRemote,
   renameTask,
-  setTaskArchived,
   shiftDays,
   toggleTimer as toggleTimerRemote,
   type TaskLoggerData,
@@ -24,7 +23,7 @@ import SectionBox from "./SectionBox";
 /**
  * Daily task logger, stored in Supabase (RLS: only the signed-in user's rows).
  *
- * Deleting a task with history archives it (restorable); unused tasks are removed for good. Minutes are an append-only ledger keyed
+ * Deleting a task removes it and its logged minutes for good (two-tap confirm). Minutes are an append-only ledger keyed
  * by local calendar day, so "today" starts from zero every midnight while past
  * days stay as history (used for the yesterday / 7-day hints). The running
  * timer lives in the database too, so it can be started on one device and
@@ -69,7 +68,8 @@ export default function TaskLoggerSection() {
   const [customMinutes, setCustomMinutes] = useState<Record<string, string>>({});
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
-  const [showArchived, setShowArchived] = useState(false);
+  /** Task whose trash button was tapped once; a second tap within a few seconds deletes it. */
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   /** Recent manual logs on one task (taps in a row add up), so a mis-tap can be undone in one click. */
   const [undo, setUndo] = useState<{ taskId: string; day: string; minutes: number } | null>(null);
@@ -155,6 +155,12 @@ export default function TaskLoggerSection() {
   }, [undo]);
 
   useEffect(() => {
+    if (!confirmDeleteId) return;
+    const id = window.setTimeout(() => setConfirmDeleteId(null), 3000);
+    return () => window.clearTimeout(id);
+  }, [confirmDeleteId]);
+
+  useEffect(() => {
     if (!notice) return;
     const id = window.setTimeout(() => setNotice(null), 4000);
     return () => window.clearTimeout(id);
@@ -194,8 +200,7 @@ export default function TaskLoggerSection() {
     Object.values(todayLog).reduce((a, b) => a + b, 0) +
     (store.timer ? liveMinutes(store.timer.taskId) : 0);
 
-  const activeTasks = useMemo(() => store.tasks.filter((t) => !t.archivedAt), [store.tasks]);
-  const archivedTasks = useMemo(() => store.tasks.filter((t) => t.archivedAt), [store.tasks]);
+  const activeTasks = store.tasks;
 
   // Today's active tasks float to the top; the rest keep creation order.
   const orderedTasks = useMemo(() => {
@@ -213,12 +218,8 @@ export default function TaskLoggerSection() {
     if (!name) return;
     setNewTaskName("");
     const existing = store.tasks.find((t) => t.name.toLowerCase() === name.toLowerCase());
-    if (existing) {
-      // Re-adding an archived task brings it (and its history) back.
-      if (existing.archivedAt) restoreTask(existing.id);
-      return;
-    }
-    const task = { id: newId(), name, createdAt: new Date().toISOString(), archivedAt: null };
+    if (existing) return;
+    const task = { id: newId(), name, createdAt: new Date().toISOString() };
     mutate(
       (d) => ({ ...d, tasks: [...d.tasks, task] }),
       () => insertTask(getSb(), task),
@@ -268,30 +269,25 @@ export default function TaskLoggerSection() {
 
   const deleteTask = (taskId: string) => {
     const task = store.tasks.find((t) => t.id === taskId);
-    if (!task || store.timer?.taskId === taskId) return;
-    setData((d) =>
-      d
-        ? { ...d, tasks: d.tasks.map((t) => (t.id === taskId ? { ...t, archivedAt: new Date().toISOString() } : t)) }
-        : d,
-    );
-    removeTask(getSb(), taskId)
-      .then((result) => {
-        setNotice(result === "deleted" ? `Deleted "${task.name}"` : `Archived "${task.name}" — history kept`);
-        return refresh();
-      })
-      .catch((e) => {
-        setError(e instanceof Error ? e.message : "Delete failed");
-        void refresh();
-      });
-  };
-
-  function restoreTask(taskId: string) {
-    setNotice(null);
+    if (!task) return;
+    if (confirmDeleteId !== taskId) {
+      setConfirmDeleteId(taskId);
+      return;
+    }
+    setConfirmDeleteId(null);
+    if (undo?.taskId === taskId) setUndo(null);
     mutate(
-      (d) => ({ ...d, tasks: d.tasks.map((t) => (t.id === taskId ? { ...t, archivedAt: null } : t)) }),
-      () => setTaskArchived(getSb(), taskId, false),
+      (d) => ({
+        ...d,
+        tasks: d.tasks.filter((t) => t.id !== taskId),
+        timer: d.timer?.taskId === taskId ? null : d.timer,
+      }),
+      async () => {
+        await deleteTaskRemote(getSb(), taskId);
+        setNotice(`Deleted "${task.name}"`);
+      },
     );
-  }
+  };
 
   const saveRename = (taskId: string) => {
     const name = renameValue.trim();
@@ -439,12 +435,21 @@ export default function TaskLoggerSection() {
                     <span className="font-bold text-crt-phosphor-bright">{formatMinutes(mins)}</span>
                   </span>
 
-                  {!running && (
+                  {confirmDeleteId === task.id ? (
+                    <button
+                      type="button"
+                      onClick={() => deleteTask(task.id)}
+                      aria-label={`Confirm delete ${task.name}`}
+                      className="shrink-0 px-2 py-1 crt-btn crt-btn-primary rounded-sm text-xs"
+                    >
+                      delete?
+                    </button>
+                  ) : (
                     <button
                       type="button"
                       onClick={() => deleteTask(task.id)}
                       aria-label={`Delete ${task.name}`}
-                      title={week > 0 || yesterday > 0 ? "Archive (history kept)" : "Delete"}
+                      title="Delete task and its minutes"
                       className="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-crt-phosphor-dim transition-colors hover:text-crt-phosphor-bright"
                     >
                       <Trash2 className="size-3.5" />
@@ -521,42 +526,6 @@ export default function TaskLoggerSection() {
         </ul>
       )}
 
-      {archivedTasks.length > 0 && (
-        <div className="mt-4 crt-text-plain">
-          <button
-            type="button"
-            onClick={() => setShowArchived((v) => !v)}
-            className="flex items-center gap-1.5 text-xs text-crt-muted hover:text-crt-phosphor"
-            aria-expanded={showArchived}
-          >
-            <Archive className="size-3.5" />
-            Archived ({archivedTasks.length})
-          </button>
-          {showArchived && (
-            <ul className="mt-2 space-y-1">
-              {archivedTasks.map((task) => (
-                <li
-                  key={task.id}
-                  className="flex items-center gap-2 rounded-sm border border-crt-border/60 px-3 py-1.5 text-sm opacity-70"
-                >
-                  <span className="min-w-0 flex-1 truncate text-crt-phosphor">{task.name}</span>
-                  <span className="text-[11px] text-crt-muted tabular-nums">
-                    7d {formatMinutes(weekTotals[task.id] ?? 0)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => restoreTask(task.id)}
-                    className="flex items-center gap-1 px-2 py-0.5 crt-btn rounded-sm text-xs"
-                  >
-                    <ArchiveRestore className="size-3.5" />
-                    Restore
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
     </SectionBox>
   );
 }
