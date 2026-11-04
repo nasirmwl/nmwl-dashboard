@@ -1,12 +1,15 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
 import {
   chainJoins,
   chainStartedOn,
   dayOn,
+  daysForLinks,
+  linkProgress,
+  monthRange,
   parseMonthKey,
   placeForDate,
   shiftMonth,
@@ -163,6 +166,124 @@ function SpanGrid({
   );
 }
 
+/**
+ * Multi-select with search. An empty selection means "All links".
+ * Selecting every link collapses back to "All" so the two states never disagree.
+ */
+function LinkSelect({
+  options,
+  selected,
+  onChange,
+}: {
+  options: string[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const needle = query.trim().toLowerCase();
+  const filtered = needle
+    ? options.filter((option) => option.toLowerCase().includes(needle))
+    : options;
+
+  const label =
+    selected.length === 0
+      ? "All links"
+      : selected.length === 1
+        ? selected[0]
+        : `${selected.length} links`;
+
+  const toggle = (title: string) => {
+    const next = selected.includes(title)
+      ? selected.filter((item) => item !== title)
+      : [...selected, title];
+    onChange(next.length === options.length ? [] : next);
+  };
+
+  return (
+    <div ref={rootRef} className="relative w-full sm:max-w-md">
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-2 rounded-sm px-3 py-2 text-left text-sm crt-input"
+      >
+        <span className="truncate">{label}</span>
+        <ChevronDown className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+      </button>
+
+      {open ? (
+        <div className="absolute left-0 right-0 z-20 mt-1 rounded-sm border border-crt-border bg-crt-panel p-2 shadow-lg">
+          <div className="relative mb-2">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-crt-muted"
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              autoFocus
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search links"
+              aria-label="Search links"
+              className="w-full rounded-sm py-1.5 pl-8 pr-3 text-sm crt-input"
+            />
+          </div>
+          <ul role="listbox" aria-multiselectable="true" aria-label="Links" className="max-h-60 space-y-0.5 overflow-y-auto">
+            <li role="option" aria-selected={selected.length === 0}>
+              <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-crt-phosphor-bright hover:bg-crt-bar-track">
+                <input
+                  type="checkbox"
+                  className="size-4 rounded border-crt-border accent-[var(--crt-phosphor)]"
+                  checked={selected.length === 0}
+                  onChange={() => onChange([])}
+                />
+                <span>All links</span>
+              </label>
+            </li>
+            {filtered.map((option) => (
+              <li key={option} role="option" aria-selected={selected.includes(option)}>
+                <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-crt-phosphor-bright hover:bg-crt-bar-track">
+                  <input
+                    type="checkbox"
+                    className="size-4 rounded border-crt-border accent-[var(--crt-phosphor)]"
+                    checked={selected.includes(option)}
+                    onChange={() => toggle(option)}
+                  />
+                  <span className="truncate">{option}</span>
+                </label>
+              </li>
+            ))}
+            {filtered.length === 0 ? (
+              <li className="px-2 py-1.5 text-sm text-crt-muted">No links match.</li>
+            ) : null}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function ChainSection() {
   const [payload, setPayload] = useState<ChainPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -170,6 +291,7 @@ export default function ChainSection() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [visibleMonth, setVisibleMonth] = useState<{ year: number; month: number } | null>(null);
   const [draft, setDraft] = useState("");
+  const [linkFilter, setLinkFilter] = useState<string[]>([]);
   const queueRef = useRef(Promise.resolve());
 
   const applyPayload = (next: ChainPayload) => {
@@ -285,6 +407,21 @@ export default function ChainSection() {
   const isFuture = selected != null && selected.targetDate > payload.today.targetDate;
   const editable = isToday && selected?.id != null;
 
+  const linkTitles = payload.templates.map((template) => template.title);
+  const activeFilter = linkFilter.filter((title) => linkTitles.includes(title));
+  const activeTitles = activeFilter.length === 0 ? linkTitles : activeFilter;
+  // With a link selected, the calendar shows that link's chain instead of whole-day status.
+  const calendarDays = activeFilter.length > 0 ? daysForLinks(payload.days, activeFilter) : payload.days;
+  const visibleItems = selected
+    ? selected.items.filter((item) => activeTitles.includes(item.title))
+    : [];
+  const progressRange = visibleMonth ? monthRange(visibleMonth.year, visibleMonth.month) : null;
+  const progressRows = progressRange
+    ? activeTitles.map((title) =>
+        linkProgress(title, payload.today.targetDate, payload.days, progressRange),
+      )
+    : [];
+
   const shiftVisibleMonth = (delta: number) => {
     if (!visibleMonth) return;
     const next = shiftMonth(visibleMonth.year, visibleMonth.month, delta);
@@ -307,6 +444,13 @@ export default function ChainSection() {
             Links repeat every day. A chain mark is a held day.
           </p>
         </div>
+
+        {linkTitles.length > 0 ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <span className="text-[11px] uppercase tracking-wider text-crt-muted">Link</span>
+            <LinkSelect options={linkTitles} selected={activeFilter} onChange={setLinkFilter} />
+          </div>
+        ) : null}
 
         {visibleMonth ? (
           <div>
@@ -341,13 +485,51 @@ export default function ChainSection() {
                     earlier={earlier}
                     later={later}
                     today={payload.today.targetDate}
-                    days={payload.days}
+                    days={calendarDays}
                     selectedDate={selectedDate ?? ""}
                     onSelect={setSelectedDate}
                   />
                 </>
               );
             })()}
+          </div>
+        ) : null}
+
+        {visibleMonth && progressRange && progressRows.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-[11px] uppercase tracking-wider text-crt-muted">
+              Progress · {monthName(visibleMonth.year, visibleMonth.month)} {visibleMonth.year}
+            </p>
+            <ul className="space-y-2">
+              {progressRows.map((row) => {
+                const percent = row.totalDays > 0 ? Math.round((row.doneDays / row.totalDays) * 100) : 0;
+                return (
+                  <li key={row.title} className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-3 text-sm">
+                      <span className="min-w-0 truncate text-crt-phosphor-bright">{row.title}</span>
+                      <span className="shrink-0 text-[11px] tabular-nums text-crt-muted">
+                        {row.doneDays}/{row.totalDays} days
+                        <span className="mx-1.5">·</span>
+                        Streak {row.currentStreak}
+                      </span>
+                    </div>
+                    <div
+                      role="progressbar"
+                      aria-label={`${row.title} progress`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={percent}
+                      className="h-1.5 w-full overflow-hidden rounded-sm bg-crt-bar-track"
+                    >
+                      <div
+                        className="h-full bg-crt-phosphor transition-[width]"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         ) : null}
 
@@ -373,9 +555,11 @@ export default function ChainSection() {
                 ? "Add a link once. It shows on every day, unchecked until you mark it."
                 : "No links on this day."}
             </p>
+          ) : selected && visibleItems.length === 0 ? (
+            <p className="text-sm text-crt-muted">None of the selected links are on this day.</p>
           ) : selected ? (
             <ul className="space-y-1">
-              {selected.items.map((item) => (
+              {visibleItems.map((item) => (
                 <li key={item.id} className="flex items-start gap-2 rounded-sm px-1 py-1">
                   <label className="flex min-w-0 flex-1 items-start gap-3">
                     <input

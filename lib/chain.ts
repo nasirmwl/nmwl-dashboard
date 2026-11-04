@@ -222,6 +222,76 @@ export function dayOn(
   };
 }
 
+/**
+ * Same days, judged only by the given links: a day is held when every one of them is checked.
+ * Used for the calendar when a link is selected, so the grid shows that link's chain.
+ */
+export function daysForLinks(rows: ChainDayView[], titles: string[]): ChainDayView[] {
+  return rows.map((row) => {
+    const items = row.items.filter((item) => titles.includes(item.title));
+    return { ...row, status: dayIsFinished(items) ? "done" : "pending" };
+  });
+}
+
+export type ChainLinkProgress = {
+  title: string;
+  /** Checked days inside the range. */
+  doneDays: number;
+  /** Days inside the range the link could be held: from its first day through today (today counts only once checked). */
+  totalDays: number;
+  currentStreak: number;
+};
+
+/** First and last ISO date of a calendar month. */
+export function monthRange(year: number, month: number): { from: string; to: string } {
+  const key = monthKey(year, month);
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return { from: `${key}-01`, to: `${key}-${String(lastDay).padStart(2, "0")}` };
+}
+
+/** Progress of one link (matched by title) across the stored days. */
+export function linkProgress(
+  title: string,
+  today: string,
+  rows: ChainDayView[],
+  range: { from: string; to: string },
+): ChainLinkProgress {
+  const byDate = new Map(rows.map((row) => [row.targetDate, row]));
+  const doneOn = (date: string) =>
+    byDate.get(date)?.items.some((item) => item.title === title && item.isDone) ?? false;
+
+  let linkStart: string | null = null;
+  for (const row of rows) {
+    if (!row.items.some((item) => item.title === title)) continue;
+    if (linkStart === null || row.targetDate < linkStart) linkStart = row.targetDate;
+  }
+
+  let doneDays = 0;
+  let totalDays = 0;
+  if (linkStart !== null) {
+    const last = range.to < today ? range.to : today;
+    let cursor = range.from > linkStart ? range.from : linkStart;
+    while (cursor <= last) {
+      if (doneOn(cursor)) {
+        doneDays += 1;
+        totalDays += 1;
+      } else if (cursor < today) {
+        totalDays += 1;
+      }
+      cursor = addUtcDays(cursor, 1);
+    }
+  }
+
+  let cursor = doneOn(today) ? today : addUtcDays(today, -1);
+  let currentStreak = 0;
+  while (doneOn(cursor)) {
+    currentStreak += 1;
+    cursor = addUtcDays(cursor, -1);
+  }
+
+  return { title, doneDays, totalDays, currentStreak };
+}
+
 /** Fill the visible strip. A past day with no row is broken and is not stored. */
 export function chainWindow(
   today: string,
