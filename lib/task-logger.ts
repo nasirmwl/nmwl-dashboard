@@ -8,7 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * supabase/migrations/20261104210000_task_logger.sql.
  */
 
-export type Task = { id: string; name: string; createdAt: string };
+export type Task = { id: string; name: string; createdAt: string; archivedAt: string | null };
 export type Timer = { taskId: string; startedAt: number };
 /** dateKey (YYYY-MM-DD, local) -> taskId -> minutes */
 export type DayLog = Record<string, Record<string, number>>;
@@ -43,7 +43,7 @@ function throwIf(error: { message: string } | null) {
 /** Tasks, the minute ledger from `fromDay` on (summed per day), and the running timer. */
 export async function fetchTaskLogger(sb: SupabaseClient, fromDay: string): Promise<TaskLoggerData> {
   const [tasksRes, entriesRes, timerRes] = await Promise.all([
-    sb.from("task_logger_tasks").select("id, name, created_at").order("created_at"),
+    sb.from("task_logger_tasks").select("id, name, created_at, archived_at").order("created_at"),
     sb.from("task_logger_entries").select("task_id, day, minutes").gte("day", fromDay).limit(10000),
     sb.from("task_logger_timers").select("task_id, started_at").maybeSingle(),
   ]);
@@ -63,7 +63,12 @@ export async function fetchTaskLogger(sb: SupabaseClient, fromDay: string): Prom
   }
 
   return {
-    tasks: (tasksRes.data ?? []).map((t) => ({ id: t.id, name: t.name, createdAt: t.created_at })),
+    tasks: (tasksRes.data ?? []).map((t) => ({
+      id: t.id,
+      name: t.name,
+      createdAt: t.created_at,
+      archivedAt: t.archived_at ?? null,
+    })),
     log,
     timer: timerRes.data
       ? { taskId: timerRes.data.task_id, startedAt: new Date(timerRes.data.started_at).getTime() }
@@ -81,6 +86,33 @@ export async function insertTask(sb: SupabaseClient, task: Task) {
 export async function renameTask(sb: SupabaseClient, id: string, name: string) {
   const { error } = await sb.from("task_logger_tasks").update({ name }).eq("id", id);
   throwIf(error);
+}
+
+export async function setTaskArchived(sb: SupabaseClient, id: string, archived: boolean) {
+  const { error } = await sb
+    .from("task_logger_tasks")
+    .update({ archived_at: archived ? new Date().toISOString() : null })
+    .eq("id", id);
+  throwIf(error);
+}
+
+/**
+ * "Delete" from the UI: a task that never had minutes logged is removed for
+ * good; one with history is archived so past days and totals stay intact.
+ */
+export async function removeTask(sb: SupabaseClient, id: string): Promise<"deleted" | "archived"> {
+  const { count, error } = await sb
+    .from("task_logger_entries")
+    .select("id", { count: "exact", head: true })
+    .eq("task_id", id);
+  throwIf(error);
+  if ((count ?? 0) === 0) {
+    const res = await sb.from("task_logger_tasks").delete().eq("id", id);
+    throwIf(res.error);
+    return "deleted";
+  }
+  await setTaskArchived(sb, id, true);
+  return "archived";
 }
 
 export async function insertEntry(sb: SupabaseClient, taskId: string, day: string, minutes: number) {
