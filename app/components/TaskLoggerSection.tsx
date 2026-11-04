@@ -1,130 +1,38 @@
 "use client";
 
 import { Pause, Pencil, Play, Plus } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import {
+  dateKey,
+  fetchTaskLogger,
+  importLegacyLocalStorage,
+  insertEntry,
+  insertTask,
+  newId,
+  renameTask,
+  shiftDays,
+  toggleTimer as toggleTimerRemote,
+  type TaskLoggerData,
+} from "@/lib/task-logger";
+import { createClient } from "@/utils/supabase/client";
 
 import SectionBox from "./SectionBox";
 
 /**
- * Daily task logger — localStorage only.
+ * Daily task logger, stored in Supabase (RLS: only the signed-in user's rows).
  *
- * Tasks are permanent (never deleted). Minutes are stored per local calendar
- * day, so "today" starts from zero every midnight while past days stay in
- * storage as history (used for the yesterday / 7-day hints).
+ * Tasks are permanent (never deleted). Minutes are an append-only ledger keyed
+ * by local calendar day, so "today" starts from zero every midnight while past
+ * days stay as history (used for the yesterday / 7-day hints). The running
+ * timer lives in the database too, so it can be started on one device and
+ * stopped on another; Realtime keeps every open tab in sync.
  */
 
-const STORAGE_KEY = "nmwl.taskLogger.v1";
 const QUICK_ADD = [5, 15, 25, 45] as const;
+const EMPTY: TaskLoggerData = { tasks: [], log: {}, timer: null };
 
-type Task = { id: string; name: string; createdAt: string };
-type Timer = { taskId: string; startedAt: number };
-type Store = {
-  tasks: Task[];
-  /** dateKey (YYYY-MM-DD, local) -> taskId -> minutes */
-  log: Record<string, Record<string, number>>;
-  timer: Timer | null;
-};
-
-const EMPTY: Store = { tasks: [], log: {}, timer: null };
-
-function dateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function shiftDays(d: Date, days: number): Date {
-  const next = new Date(d);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
-function parseStore(raw: string | null): Store {
-  if (!raw) return EMPTY;
-  try {
-    const parsed = JSON.parse(raw) as Partial<Store>;
-    return {
-      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
-      log: parsed.log && typeof parsed.log === "object" ? parsed.log : {},
-      timer: parsed.timer ?? null,
-    };
-  } catch {
-    return EMPTY;
-  }
-}
-
-// --- tiny localStorage-backed external store (works with useSyncExternalStore) ---
-const listeners = new Set<() => void>();
-let cache: { raw: string | null; store: Store } = { raw: null, store: EMPTY };
-let memoryRaw: string | null = null; // fallback when storage is blocked
-
-function readRaw(): string | null {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return memoryRaw;
-  }
-}
-
-function getSnapshot(): Store {
-  const raw = readRaw();
-  if (raw !== cache.raw) cache = { raw, store: parseStore(raw) };
-  return cache.store;
-}
-
-function getServerSnapshot(): Store | null {
-  return null;
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY) listener();
-  };
-  window.addEventListener("storage", onStorage);
-  return () => {
-    listeners.delete(listener);
-    window.removeEventListener("storage", onStorage);
-  };
-}
-
-function updateStore(fn: (s: Store) => Store) {
-  const raw = JSON.stringify(fn(getSnapshot()));
-  memoryRaw = raw;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, raw);
-  } catch {
-    /* storage full / blocked — memoryRaw keeps this session working */
-  }
-  listeners.forEach((l) => l());
-}
-
-function addMinutes(
-  log: Store["log"],
-  day: string,
-  taskId: string,
-  delta: number,
-): Store["log"] {
-  const dayLog = { ...(log[day] ?? {}) };
-  dayLog[taskId] = Math.max(0, (dayLog[taskId] ?? 0) + delta);
-  return { ...log, [day]: dayLog };
-}
-
-/** Credit a finished timer run, splitting it across midnights if needed. */
-function creditTimer(log: Store["log"], timer: Timer, endMs: number): Store["log"] {
-  let next = log;
-  let cursor = timer.startedAt;
-  while (cursor < endMs) {
-    const start = new Date(cursor);
-    const midnight = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1).getTime();
-    const segmentEnd = Math.min(midnight, endMs);
-    const minutes = Math.round((segmentEnd - cursor) / 60000);
-    if (minutes > 0) next = addMinutes(next, dateKey(start), timer.taskId, minutes);
-    cursor = segmentEnd;
-  }
-  return next;
-}
+type Supabase = ReturnType<typeof createClient>;
 
 function formatMinutes(total: number): string {
   if (total <= 0) return "0m";
@@ -144,20 +52,81 @@ function formatClock(ms: number): string {
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-function newId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
 export default function TaskLoggerSection() {
-  const snapshot = useSyncExternalStore<Store | null>(subscribe, getSnapshot, getServerSnapshot);
-  const ready = snapshot !== null;
-  const store = snapshot ?? EMPTY;
+  const sbRef = useRef<Supabase | null>(null);
+  const getSb = useCallback(() => (sbRef.current ??= createClient()), []);
+
+  const [data, setData] = useState<TaskLoggerData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const ready = data !== null;
+  const store = data ?? EMPTY;
   const [now, setNow] = useState(() => Date.now());
   const [newTaskName, setNewTaskName] = useState("");
   const [customMinutes, setCustomMinutes] = useState<Record<string, string>>({});
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+
+  const today = dateKey(new Date(now));
+  const fromDay = dateKey(shiftDays(new Date(now), -7));
+
+  // Latest fetch wins; older responses that land late are dropped.
+  const fetchSeq = useRef(0);
+  const refresh = useCallback(async () => {
+    const seq = ++fetchSeq.current;
+    try {
+      const next = await fetchTaskLogger(getSb(), fromDay);
+      if (seq === fetchSeq.current) {
+        setData(next);
+        setError(null);
+      }
+    } catch (e) {
+      if (seq === fetchSeq.current) setError(e instanceof Error ? e.message : "Failed to load");
+    }
+  }, [getSb, fromDay]);
+
+  // Initial load (+ one-time import of the old localStorage log), and again whenever the day rolls over.
+  const imported = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!imported.current) {
+        imported.current = true;
+        try {
+          await importLegacyLocalStorage(getSb());
+        } catch (e) {
+          if (!cancelled) setError(`Import from this browser failed: ${e instanceof Error ? e.message : e}`);
+        }
+      }
+      if (!cancelled) await refresh();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getSb, refresh]);
+
+  // Realtime: any change from another tab/device triggers a (debounced) refetch.
+  useEffect(() => {
+    const sb = getSb();
+    let timeout: number | undefined;
+    const schedule = () => {
+      window.clearTimeout(timeout);
+      timeout = window.setTimeout(() => void refresh(), 250);
+    };
+    const channel = sb.channel("task-logger");
+    for (const table of ["task_logger_tasks", "task_logger_entries", "task_logger_timers"]) {
+      channel.on("postgres_changes", { event: "*", schema: "public", table }, schedule);
+    }
+    channel.subscribe();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") schedule();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearTimeout(timeout);
+      document.removeEventListener("visibilitychange", onVisible);
+      void sb.removeChannel(channel);
+    };
+  }, [getSb, refresh]);
 
   // Tick every second while a timer runs, otherwise every 30s (for midnight rollover).
   const timerRunning = store.timer !== null;
@@ -171,9 +140,17 @@ export default function TaskLoggerSection() {
     };
   }, [timerRunning]);
 
-  const update = updateStore;
+  /** Optimistic local change, then persist; on failure show the error and reload the truth. */
+  const mutate = (local: (d: TaskLoggerData) => TaskLoggerData, remote: () => Promise<void>) => {
+    setData((d) => (d ? local(d) : d));
+    remote()
+      .then(() => refresh())
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : "Save failed");
+        void refresh();
+      });
+  };
 
-  const today = dateKey(new Date(now));
   const todayLog = useMemo(() => store.log[today] ?? {}, [store.log, today]);
   const yesterdayLog = store.log[dateKey(shiftDays(new Date(now), -1))] ?? {};
 
@@ -190,7 +167,7 @@ export default function TaskLoggerSection() {
 
   const liveMinutes = (taskId: string) =>
     store.timer?.taskId === taskId
-      ? Math.floor((now - Math.max(store.timer.startedAt, new Date(now).setHours(0, 0, 0, 0))) / 60000)
+      ? Math.max(0, Math.floor((now - Math.max(store.timer.startedAt, new Date(now).setHours(0, 0, 0, 0))) / 60000))
       : 0;
 
   const todayTotal =
@@ -211,20 +188,29 @@ export default function TaskLoggerSection() {
     e.preventDefault();
     const name = newTaskName.trim();
     if (!name) return;
-    if (store.tasks.some((t) => t.name.toLowerCase() === name.toLowerCase())) {
-      setNewTaskName("");
-      return;
-    }
-    update((s) => ({
-      ...s,
-      tasks: [...s.tasks, { id: newId(), name, createdAt: new Date().toISOString() }],
-    }));
     setNewTaskName("");
+    if (store.tasks.some((t) => t.name.toLowerCase() === name.toLowerCase())) return;
+    const task = { id: newId(), name, createdAt: new Date().toISOString() };
+    mutate(
+      (d) => ({ ...d, tasks: [...d.tasks, task] }),
+      () => insertTask(getSb(), task),
+    );
   };
 
   const logMinutes = (taskId: string, delta: number) => {
     if (!Number.isFinite(delta) || delta === 0) return;
-    update((s) => ({ ...s, log: addMinutes(s.log, dateKey(new Date()), taskId, Math.round(delta)) }));
+    const day = dateKey(new Date());
+    const current = store.log[day]?.[taskId] ?? 0;
+    // Never let a correction take the day below zero.
+    const applied = Math.max(-current, Math.max(-1440, Math.min(1440, Math.round(delta))));
+    if (applied === 0) return;
+    mutate(
+      (d) => ({
+        ...d,
+        log: { ...d.log, [day]: { ...(d.log[day] ?? {}), [taskId]: current + applied } },
+      }),
+      () => insertEntry(getSb(), taskId, day, applied),
+    );
   };
 
   const submitCustom = (taskId: string) => {
@@ -235,30 +221,38 @@ export default function TaskLoggerSection() {
   };
 
   const toggleTimer = (taskId: string) => {
-    update((s) => {
-      const end = Date.now();
-      let log = s.log;
-      if (s.timer) log = creditTimer(log, s.timer, end);
-      const stoppingSame = s.timer?.taskId === taskId;
-      return { ...s, log, timer: stoppingSame ? null : { taskId, startedAt: end } };
-    });
+    const stoppingSame = store.timer?.taskId === taskId;
+    // Optimistic: flip the timer now; the server credits minutes (split at midnight) and the refetch shows them.
+    mutate(
+      (d) => ({ ...d, timer: stoppingSame ? null : { taskId, startedAt: Date.now() } }),
+      () => toggleTimerRemote(getSb(), taskId),
+    );
   };
 
   const saveRename = (taskId: string) => {
     const name = renameValue.trim();
-    if (name) {
-      update((s) => ({
-        ...s,
-        tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, name } : t)),
-      }));
-    }
     setRenamingId(null);
+    const task = store.tasks.find((t) => t.id === taskId);
+    if (!name || !task || task.name === name) return;
+    mutate(
+      (d) => ({ ...d, tasks: d.tasks.map((t) => (t.id === taskId ? { ...t, name } : t)) }),
+      () => renameTask(getSb(), taskId, name),
+    );
   };
 
   if (!ready) {
     return (
       <SectionBox title="Today's log">
-        <div className="animate-pulse h-32 bg-crt-bar-track/40 rounded-sm" />
+        {error ? (
+          <p className="py-6 text-center text-sm text-crt-muted crt-text-plain">
+            Couldn&apos;t load: {error}{" "}
+            <button type="button" onClick={() => void refresh()} className="underline">
+              retry
+            </button>
+          </p>
+        ) : (
+          <div className="animate-pulse h-32 bg-crt-bar-track/40 rounded-sm" />
+        )}
       </SectionBox>
     );
   }
@@ -270,12 +264,18 @@ export default function TaskLoggerSection() {
       <div className="mb-4 flex items-baseline justify-between gap-3 crt-text-plain">
         <span className="text-sm text-crt-muted">
           {new Date(now).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" })}
-          <span className="ml-2 text-xs text-crt-phosphor-dim">resets at midnight</span>
+          <span className="ml-2 text-xs text-crt-phosphor-dim">resets at midnight · synced</span>
         </span>
         <span className="text-lg font-bold text-crt-phosphor-bright tabular-nums">
           {formatMinutes(todayTotal)}
         </span>
       </div>
+
+      {error && (
+        <p className="mb-3 text-xs text-crt-muted crt-text-plain" role="alert">
+          ⚠ {error}
+        </p>
+      )}
 
       <form onSubmit={handleAddTask} className="mb-4 flex gap-2">
         <input
