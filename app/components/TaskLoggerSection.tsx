@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ArchiveRestore, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Pause, Pencil, Play, Plus, Trash2, Undo2 } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -32,6 +32,8 @@ import SectionBox from "./SectionBox";
  */
 
 const QUICK_ADD = [5, 15, 25, 45] as const;
+/** How long the per-task "undo" stays visible after logging. */
+const UNDO_MS = 8000;
 const EMPTY: TaskLoggerData = { tasks: [], log: {}, timer: null };
 
 type Supabase = ReturnType<typeof createClient>;
@@ -69,6 +71,8 @@ export default function TaskLoggerSection() {
   const [renameValue, setRenameValue] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  /** Recent manual logs on one task (taps in a row add up), so a mis-tap can be undone in one click. */
+  const [undo, setUndo] = useState<{ taskId: string; day: string; minutes: number } | null>(null);
 
   const today = dateKey(new Date(now));
   const fromDay = dateKey(shiftDays(new Date(now), -7));
@@ -145,6 +149,12 @@ export default function TaskLoggerSection() {
   }, [timerRunning]);
 
   useEffect(() => {
+    if (!undo) return;
+    const id = window.setTimeout(() => setUndo(null), UNDO_MS);
+    return () => window.clearTimeout(id);
+  }, [undo]);
+
+  useEffect(() => {
     if (!notice) return;
     const id = window.setTimeout(() => setNotice(null), 4000);
     return () => window.clearTimeout(id);
@@ -215,13 +225,22 @@ export default function TaskLoggerSection() {
     );
   };
 
-  const logMinutes = (taskId: string, delta: number) => {
+  const logMinutes = (taskId: string, delta: number, { isUndo = false } = {}) => {
     if (!Number.isFinite(delta) || delta === 0) return;
     const day = dateKey(new Date());
     const current = store.log[day]?.[taskId] ?? 0;
     // Never let a correction take the day below zero.
     const applied = Math.max(-current, Math.max(-1440, Math.min(1440, Math.round(delta))));
     if (applied === 0) return;
+    if (isUndo) {
+      setUndo(null);
+    } else {
+      setUndo((u) =>
+        u && u.taskId === taskId && u.day === day
+          ? { ...u, minutes: u.minutes + applied }
+          : { taskId, day, minutes: applied },
+      );
+    }
     mutate(
       (d) => ({
         ...d,
@@ -441,6 +460,27 @@ export default function TaskLoggerSection() {
                 </div>
 
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {undo?.taskId === task.id && undo.day === today && undo.minutes !== 0 && (
+                    <button
+                      type="button"
+                      onClick={() => logMinutes(task.id, -undo.minutes, { isUndo: true })}
+                      className="flex items-center gap-1 px-2 py-1 crt-btn crt-btn-primary rounded-sm text-xs tabular-nums"
+                      title="Undo the last log on this task"
+                    >
+                      <Undo2 className="size-3.5" />
+                      undo {undo.minutes > 0 ? "+" : "−"}
+                      {Math.abs(undo.minutes)}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => logMinutes(task.id, -5)}
+                    disabled={(todayLog[task.id] ?? 0) === 0}
+                    className="px-2 py-1 crt-btn rounded-sm text-xs tabular-nums disabled:opacity-40"
+                    title="Remove 5 minutes"
+                  >
+                    −5
+                  </button>
                   {QUICK_ADD.map((m) => (
                     <button
                       key={m}
