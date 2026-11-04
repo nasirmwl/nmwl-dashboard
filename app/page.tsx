@@ -10,6 +10,7 @@ import GrowthStatsPanel from './components/GrowthStatsPanel';
 import NotesSection from './components/NotesSection';
 // import PodcastsSection from './components/PodcastsSection';
 import ProtectedPage from './components/ProtectedPage';
+import TaskLoggerSection from './components/TaskLoggerSection';
 // import WeatherSection from './components/WeatherSection';
 import { useGlobalToggleShortcut } from './hooks/useSectionToggle';
 
@@ -97,6 +98,10 @@ export default function Home() {
 
             <section>
               <ChainSection />
+            </section>
+
+            <section>
+              <TaskLoggerSection />
             </section>
 
             {/* <section>
